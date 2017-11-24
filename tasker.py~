@@ -1,6 +1,6 @@
-# Version: 2
-# Date: 15.11.17
-# Time: 00:16
+# Version: 3 
+# Date: 23.11.17
+# Time: 11:14
 
 
 
@@ -161,19 +161,23 @@ def tasker_quit(ask=0):
     else:
         sys.exit()
 
-def tasker_add(task):
-    #TODO delete the last execution where all the rows are deleted from notes
+
+def last_record(table):
+    # TODO the question is how to address tables (as they are not
+    # standard variables of python)
     """
-    >>> tasker_add('tasker    gogakal ronyal iskal     #')
-    gogakal ronyal iskal
+    >>> last_record('notes')
+    'kal'
+
     """
-    end_of_task = task.find('#')
-    task_name = task[7:end_of_task].strip()
-    c.execute("""insert into notes VALUES (Null, ?)""", (task_name,))
-    a = c.execute("""select * from notes""")
-    for row in a:
-        print(row[1])
-    c.execute("""delete from notes""")
+    c.execute("""delete from tags""")
+    c.execute("""insert into tags VALUES (1, 'goga')""")
+    c.execute("""insert into tags VALUES (2, 'kal')""")
+    last_record = c.execute("""select * from ? where 
+            ROWID = (select max(ROWID) from ?)""", (table, table))
+    for item in last_record:
+        print(item)
+
 
 def return_tags(text):
     """

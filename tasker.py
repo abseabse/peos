@@ -1,6 +1,6 @@
-# Version: 3 
-# Date: 23.11.17
-# Time: 11:14
+# Version: 4 
+# Date: 25.11.17
+# Time: 00:08
 
 
 
@@ -161,19 +161,52 @@ def tasker_quit(ask=0):
     else:
         sys.exit()
 
+
 def tasker_add(task):
-    #TODO delete the last execution where all the rows are deleted from notes
+    #TODO implement check if no double # symbols are entered
+    #     and other symbols that are not numbers\letters
     """
-    >>> tasker_add('tasker    gogakal ronyal iskal     #')
+    >>> tasker_add('tasker    gogakal ronyal iskal     # i, vesma, iz kal')
     gogakal ronyal iskal
     """
     end_of_task = task.find('#')
     task_name = task[7:end_of_task].strip()
+    #TODO wrap into transaction
     c.execute("""insert into notes VALUES (Null, ?)""", (task_name,))
-    a = c.execute("""select * from notes""")
-    for row in a:
-        print(row[1])
-    c.execute("""delete from notes""")
+    # (above) +1 is necessary to omit leading symbol #
+    last_record = c.execute("""select * from notes
+                               where ID_note = 
+                               (select max(ID_note) from notes)""")
+    #TODO hide the complexity in the subfunction
+    #TODO deal with doubling tags in the subfunction 
+    # (to prevent function from crashing)
+    list_of_tags = return_tags(task[end_of_task+1:])
+    #TODO deal with FOREIGN KEY constraint error arising
+    #TODO commited for a while (while dealing last_record function)
+    '''
+    for tag in list_of_tags:
+        c.execute("""insert into tags VALUES (Null, ?)""", (tag,))
+        last_tag
+        c.execute("""insert into notes_tags VALUES (?, ?)""", 
+                 (task_name, tag))
+    '''
+
+def last_record(table):
+    # TODO the question is how to address tables (as they are not
+    # standard variables of python)
+    """
+    >>> last_record('notes')
+    'kal'
+
+    """
+    c.execute("""delete from tags""")
+    c.execute("""insert into tags VALUES (1, 'goga')""")
+    c.execute("""insert into tags VALUES (2, 'kal')""")
+    last_record = c.execute("""select * from ? where 
+            ROWID = (select max(ROWID) from ?)""", (table, table))
+    for item in last_record:
+        print(item)
+
 
 def return_tags(text):
     """
