@@ -1,6 +1,6 @@
-# Version: 4 
-# Date: 25.11.17
-# Time: 00:08
+# Version: 5 
+# Date: 27.11.17
+# Time: 22:10
 
 
 
@@ -165,48 +165,33 @@ def tasker_quit(ask=0):
 def tasker_add(task):
     #TODO implement check if no double # symbols are entered
     #     and other symbols that are not numbers\letters
-    """
-    >>> tasker_add('tasker    gogakal ronyal iskal     # i, vesma, iz kal')
-    gogakal ronyal iskal
-    """
     end_of_task = task.find('#')
     task_name = task[7:end_of_task].strip()
     #TODO wrap into transaction
     c.execute("""insert into notes VALUES (Null, ?)""", (task_name,))
-    # (above) +1 is necessary to omit leading symbol #
-    last_record = c.execute("""select * from notes
-                               where ID_note = 
-                               (select max(ID_note) from notes)""")
+    note_id_for_insertion = last_record_id('notes')
     #TODO hide the complexity in the subfunction
-    #TODO deal with doubling tags in the subfunction 
+    #TODO TODO deal with doubling tags in the subfunction 
     # (to prevent function from crashing)
     list_of_tags = return_tags(task[end_of_task+1:])
-    #TODO deal with FOREIGN KEY constraint error arising
-    #TODO commited for a while (while dealing last_record function)
-    '''
     for tag in list_of_tags:
         c.execute("""insert into tags VALUES (Null, ?)""", (tag,))
-        last_tag
+        tag_id_for_insertion = last_record_id('tags')
         c.execute("""insert into notes_tags VALUES (?, ?)""", 
-                 (task_name, tag))
-    '''
-
+                (note_id_for_insertion, tag_id_for_insertion))
+    
 def last_record(table):
-    # TODO the question is how to address tables (as they are not
-    # standard variables of python)
-    """
-    >>> last_record('notes')
-    'kal'
+    #TODO deal with possible sql-injection in the function
+    #TODO write a test
+    resulting_last_record = c.execute("""select * from {table_name} 
+            where ROWID = (SELECT MAX(ROWID) from {table_name})""".format
+            (table_name=table))
+    return(resulting_last_record)
 
-    """
-    c.execute("""delete from tags""")
-    c.execute("""insert into tags VALUES (1, 'goga')""")
-    c.execute("""insert into tags VALUES (2, 'kal')""")
-    last_record = c.execute("""select * from ? where 
-            ROWID = (select max(ROWID) from ?)""", (table, table))
-    for item in last_record:
-        print(item)
-
+def last_record_id(table):
+    last_record_cursor = last_record(table)
+    for item in last_record_cursor:
+        return(item[0])
 
 def return_tags(text):
     """
