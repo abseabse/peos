@@ -1,6 +1,6 @@
-# Version: 5 
-# Date: 27.11.17
-# Time: 22:10
+# Version: 6 
+# Date: 29.11.17
+# Time: 21:18
 
 
 
@@ -183,10 +183,24 @@ def tasker_add(task):
             c.execute("""insert into notes_tags VALUES (?, ?)""", 
                     (note_id_for_insertion, tag_id_for_insertion))
     except Warning:
-        return('Error: Shit happened')
+        return('Error: Shit have happened')
 
 def tasker_tags():
-    pass
+    #TODO TODO write tests
+    list_of_tags = c.execute("""SELECT tag FROM tags""")
+    resulting_dictionary = {}
+    for tag in list_of_tags:
+        tag_id = return_tag_id(tag)
+        number_of_notes = c.execute("""SELECT COUNT(*) FROM notes_tags WHERE                                        (ID_tag = ?)""", (tag_id))
+        for item in number_of_notes:
+            resulting_dictionary[tag[0]] = item[0]
+    return(resulting_dictionary)
+        
+def return_tag_id(tag):
+    #TODO write a test
+    tag_id = c.execute("""SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag))
+    for item in tag_id:
+        return(item)
 
 def remove_doubled_tags(list_of_tags):
     """
