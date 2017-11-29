@@ -1,8 +1,6 @@
-# Version: 6 
-# Date: 29.11.17
-# Time: 21:18
-
-
+# Version: 7 
+# Date: 30.11.17
+# Time: 2:08 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -12,6 +10,54 @@ import re
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then test block will be executed, otherwise not
 quit = 1
+
+# COMMANDS DICTIONARY
+commands_dictionary = {'tasker quit': 'tasker_quit(%)'}
+
+# TODO!!! rewrite the code block underneath, first operation should be convertation of
+# the whole input string to list: [
+#                       'tasker' (as initializer)>, 
+#                       <command>, 
+#                       <sting before hash>,
+#                       <list after hash>
+#                       ]
+# It would be much easier to operate with list, than with string.
+# Also this can cause chain changes in the actual commands (as input will be different).
+# But that's OK and even desirable, as it leads to much more sustainable and simple system.
+'''
+def input_sting_parse(input_string):
+# TODO TODO TODO write the function
+    if input_starts_with_tasker:
+        pass            
+    else:
+        print('Error!')
+
+def input_starts_with_tasker(input_string):
+    """
+    >>> input_starts_with_tasker('gogakal')
+    False
+
+    >>> input_starts_with_tasker('tasker')
+    False
+
+    >>> input_starts_with_tasker('  tasker    ')
+    True
+
+    >>> input_starts_with_tasker('  taskerf    ')
+    False
+
+    """
+    # TODO rewrite regex under this line using re.VERBOSE
+    check = re.compile('''^(\s*)(tasker)(\s+)''')
+    if check.match(input_string) is not None:
+        return True
+    else:
+        return False
+
+def slice_off_command(input_string):
+# TODO write the function
+    slicing_regex = re.compile('''()()''')
+'''
 
 conn = sqlite3.connect('example.db')
 c = conn.cursor()
