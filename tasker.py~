@@ -14,7 +14,7 @@ quit = 1
 # COMMANDS DICTIONARY
 commands_dictionary = {'tasker quit': 'tasker_quit(%)'}
 
-# TODO!!! rewrite the code block underneath, first operation should be convertation of
+# FIXME!!! rewrite the code block underneath, first operation should be convertation of
 # the whole input string to list: [
 #                       'tasker' (as initializer)>, 
 #                       <command>, 
@@ -24,40 +24,7 @@ commands_dictionary = {'tasker quit': 'tasker_quit(%)'}
 # It would be much easier to operate with list, than with string.
 # Also this can cause chain changes in the actual commands (as input will be different).
 # But that's OK and even desirable, as it leads to much more sustainable and simple system.
-'''
-def input_sting_parse(input_string):
-# TODO TODO TODO write the function
-    if input_starts_with_tasker:
-        pass            
-    else:
-        print('Error!')
 
-def input_starts_with_tasker(input_string):
-    """
-    >>> input_starts_with_tasker('gogakal')
-    False
-
-    >>> input_starts_with_tasker('tasker')
-    False
-
-    >>> input_starts_with_tasker('  tasker    ')
-    True
-
-    >>> input_starts_with_tasker('  taskerf    ')
-    False
-
-    """
-    # TODO rewrite regex under this line using re.VERBOSE
-    check = re.compile('''^(\s*)(tasker)(\s+)''')
-    if check.match(input_string) is not None:
-        return True
-    else:
-        return False
-
-def slice_off_command(input_string):
-# TODO write the function
-    slicing_regex = re.compile('''()()''')
-'''
 
 conn = sqlite3.connect('example.db')
 c = conn.cursor()
@@ -208,28 +175,26 @@ def tasker_quit(ask=0):
     else:
         sys.exit()
 
-
 def tasker_add(task):
     """
     >>> tasker_add('tasker # #')
-    'Error: Wrong task name'
+    'Error: Wrong task name' 
     """
     if command_check(task) is False:
-        return('Error: Wrong task name')
-    end_of_task = task.find('#')
-    task_name = task[7:end_of_task].strip()
+        return('Error: Wrong task name')  
+    input_dictionary = convert_input_to_dictionary(task)
     try:
-        c.execute("""insert into notes VALUES (Null, ?)""", (task_name,))
+        c.execute("""insert into notes VALUES (Null, ?)""", (input_dictionary['command'],))
         note_id_for_insertion = last_record_id('notes')
-        dirty_list_of_tags = return_tags(task[end_of_task+1:])
-        clean_list_of_tags = remove_doubled_tags(dirty_list_of_tags)
-        for tag in clean_list_of_tags:
+        for tag in input_dictionary['tags']:
             c.execute("""insert into tags VALUES (Null, ?)""", (tag,))
             tag_id_for_insertion = last_record_id('tags')
             c.execute("""insert into notes_tags VALUES (?, ?)""", 
                     (note_id_for_insertion, tag_id_for_insertion))
+        a = c.execute("""SELECT * from notes""")
     except Warning:
         return('Error: Shit have happened')
+    
 
 def tasker_tags():
     #TODO TODO write tests
@@ -342,7 +307,29 @@ def return_tags(text):
         else:
             return_list.append(tag.strip())
     return(return_list)
-        
+
+def only_one_hash_check(input_string):
+    check = re.compile('''[#]''')
+    if len(check.findall(input_string)) == 1:
+        return True
+    else:
+        return False
+
+def convert_input_to_dictionary(input_string):
+    """
+    >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
+    {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
+    """
+    resulting_dictionary = {}
+    list_separated_by_hash = input_string.split('#')
+    leading_string = list_separated_by_hash[0]
+    trailing_string = list_separated_by_hash[1]
+    leading_list = leading_string.split()
+    resulting_dictionary['beginning'] = leading_list[0]
+    resulting_dictionary['command'] = leading_list[1]
+    resulting_dictionary['tags'] = return_tags(trailing_string)
+    return(resulting_dictionary)
+
 
 # TEST CYCLE
 if __name__ == '__main__':
