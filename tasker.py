@@ -1,6 +1,6 @@
-# Version: 7 
+# Version: 8
 # Date: 30.11.17
-# Time: 2:08 GMT+5
+# Time: 23:48 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -13,17 +13,6 @@ quit = 1
 
 # COMMANDS DICTIONARY
 commands_dictionary = {'tasker quit': 'tasker_quit(%)'}
-
-# FIXME!!! rewrite the code block underneath, first operation should be convertation of
-# the whole input string to list: [
-#                       'tasker' (as initializer)>, 
-#                       <command>, 
-#                       <sting before hash>,
-#                       <list after hash>
-#                       ]
-# It would be much easier to operate with list, than with string.
-# Also this can cause chain changes in the actual commands (as input will be different).
-# But that's OK and even desirable, as it leads to much more sustainable and simple system.
 
 
 conn = sqlite3.connect('example.db')
@@ -163,6 +152,7 @@ if testmode == 1:
 
 
 # FUNCTIONS
+# main functions
 def tasker_quit(ask=0):
     """
     1>>> tasker_quit(1)
@@ -194,8 +184,9 @@ def tasker_add(task):
         a = c.execute("""SELECT * from notes""")
     except Warning:
         return('Error: Shit have happened')
-    
 
+
+# auxiliary functions
 def tasker_tags():
     #TODO TODO write tests
     list_of_tags = c.execute("""SELECT tag FROM tags""")

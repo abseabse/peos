@@ -178,7 +178,7 @@ def tasker_quit(ask=0):
 def tasker_add(task):
     """
     >>> tasker_add('tasker # #')
-    'Error: Wrong task name' 
+    'Error: Wrong task name'
     """
     if command_check(task) is False:
         return('Error: Wrong task name')  
