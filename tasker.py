@@ -1,6 +1,6 @@
-# Version: 8
-# Date: 30.11.17
-# Time: 23:48 GMT+5
+# Version: 9
+# Date: 1.12.17
+# Time: 00:59 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -10,9 +10,6 @@ import re
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then test block will be executed, otherwise not
 quit = 1
-
-# COMMANDS DICTIONARY
-commands_dictionary = {'tasker quit': 'tasker_quit(%)'}
 
 
 conn = sqlite3.connect('example.db')
@@ -153,6 +150,19 @@ if testmode == 1:
 
 # FUNCTIONS
 # main functions
+def chief_function(input_string):
+    input_dictionary = convert_input_to_dictionary(input_string)
+    if input_dictionary['beginning'] == 'tasker':
+        command = input_dictionary['command']
+        if command == 'add':
+            tasker_add(input_string)
+        elif command == 'quit':
+            tasker_quit(ask=1)
+        else:
+            print('No such a command!')
+    else:
+        print('Error!')
+
 def tasker_quit(ask=0):
     """
     1>>> tasker_quit(1)
@@ -188,7 +198,7 @@ def tasker_add(task):
 
 # auxiliary functions
 def tasker_tags():
-    #TODO TODO write tests
+    #TODO write tests
     list_of_tags = c.execute("""SELECT tag FROM tags""")
     resulting_dictionary = {}
     for tag in list_of_tags:
@@ -300,11 +310,20 @@ def return_tags(text):
     return(return_list)
 
 def only_one_hash_check(input_string):
+    #TODO merge with no_hash_check()
     check = re.compile('''[#]''')
     if len(check.findall(input_string)) == 1:
         return True
     else:
         return False
+
+def no_hash_check(input_string):
+    check = re.compile('''[#]''')
+    if len(check.findall(input_string)) == 0:
+        return True
+    else:
+        return False
+
 
 def convert_input_to_dictionary(input_string):
     """
@@ -314,11 +333,15 @@ def convert_input_to_dictionary(input_string):
     resulting_dictionary = {}
     list_separated_by_hash = input_string.split('#')
     leading_string = list_separated_by_hash[0]
-    trailing_string = list_separated_by_hash[1]
     leading_list = leading_string.split()
+    # FIXME there can be no hash symbol
     resulting_dictionary['beginning'] = leading_list[0]
-    resulting_dictionary['command'] = leading_list[1]
-    resulting_dictionary['tags'] = return_tags(trailing_string)
+    resulting_dictionary['command'] = leading_list[1] 
+    if no_hash_check(input_string) == False:
+        trailing_string = list_separated_by_hash[1]
+        resulting_dictionary['tags'] = return_tags(trailing_string)
+    else:
+        resulting_dictionary['tags'] = []
     return(resulting_dictionary)
 
 
@@ -332,7 +355,4 @@ if __name__ == '__main__':
 # MAIN CYCLE
     while quit == 1:
         user_command = input('Enter command: ')
-        if user_command == 'tasker quit':
-            tasker_quit(ask=1)
-        else:
-            print('gogakal')
+        chief_function(user_command)
