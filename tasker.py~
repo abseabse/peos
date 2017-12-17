@@ -151,7 +151,7 @@ if testmode == 1:
 # FUNCTIONS
 # main functions
 def input_check (input_string):
-    #TODO do this function
+    #TODO TODO TODO do this function
     # The upper layer function, that checks if input is overall correct.
     """
     >>> input_check('tasker add gogakal # ronyal, iskal')

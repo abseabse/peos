@@ -152,11 +152,9 @@ if testmode == 1:
 # main functions
 def input_check (input_string):
     #TODO TODO TODO do this function
-    # The upper layer function, that checks if input is overall correct.
-    """
-    >>> input_check('tasker add gogakal # ronyal, iskal')
-    
-    """
+    # The upper layer function, that checks if input is correct in overall.
+    try command_check(input_string):
+
     
 def chief_function(input_string):
     input_dictionary = convert_input_to_dictionary(input_string)
