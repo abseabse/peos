@@ -1,6 +1,6 @@
-# Version: 8
-# Date: 30.11.17
-# Time: 23:48 GMT+5
+# Version: 10
+# Date: 17.12.17
+# Time: 20:16 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -150,6 +150,14 @@ if testmode == 1:
 
 # FUNCTIONS
 # main functions
+def input_check (input_string):
+    #TODO do this function
+    # The upper layer function, that checks if input is overall correct.
+    """
+    >>> input_check('tasker add gogakal # ronyal, iskal')
+    
+    """
+    
 def chief_function(input_string):
     input_dictionary = convert_input_to_dictionary(input_string)
     if input_dictionary['beginning'] == 'tasker':
@@ -194,7 +202,6 @@ def tasker_add(task):
         a = c.execute("""SELECT * from notes""")
     except Warning:
         return('Error: Shit have happened')
-
 
 # auxiliary functions
 def tasker_tags():
@@ -326,6 +333,7 @@ def no_hash_check(input_string):
 
 
 def convert_input_to_dictionary(input_string):
+    # TODO input should be converted to dictionary only once - in the initial Check function.
     """
     >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
     {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
