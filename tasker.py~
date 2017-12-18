@@ -1,6 +1,6 @@
-# Version: 11
+# Version: 13
 # Date: 18.12.17
-# Time: 19:53 GMT+5
+# Time: 20:55 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -331,6 +331,9 @@ def return_tags(text):
     """
     >>> return_tags('goga, mnogo ,,  , kal iskal, ne')
     ['goga', 'mnogo', 'kal iskal', 'ne']
+
+    >>> return_tags('goga, mnogo ,,  , kal iskal# ,# ne')
+    ['goga', 'mnogo', 'kal iskal', 'ne']
     """
     initial_list = text.split(',')
     return_list = []
@@ -338,7 +341,8 @@ def return_tags(text):
         if tag.isspace() == True or tag == '':
             pass
         else:
-            return_list.append(tag.strip())
+            tag_cleared_from_hashtags = re.sub('[#]', '', tag)
+            return_list.append(tag_cleared_from_hashtags.strip())
     return(return_list)
 
 def only_one_hash_check(input_string):
@@ -358,18 +362,31 @@ def no_hash_check(input_string):
 
 
 def convert_input_to_dictionary(input_string):
-    # TODO input should be converted to dictionary only once - in the initial Check function.
     """
     >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
     {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
+
+    >>> convert_input_to_dictionary('tasker')
+    {'beginning': 'tasker', 'command': '', 'tags': []}
+
+    >>> convert_input_to_dictionary('tasker gogakal ronyal iskal')
+    {'beginning': 'tasker', 'command': 'gogakal', 'tags': []}
+
+    >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , # is kal')
+    {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
     """
     resulting_dictionary = {}
-    list_separated_by_hash = input_string.split('#')
-    leading_string = list_separated_by_hash[0]
-    leading_list = leading_string.split()
-    # FIXME there can be no hash symbol
+    if no_hash_check(input_string) == True:
+        leading_list = input_string.split()
+    else:
+        list_separated_by_hash = input_string.split('#', 1)
+        leading_string = list_separated_by_hash[0]
+        leading_list = leading_string.split()
     resulting_dictionary['beginning'] = leading_list[0]
-    resulting_dictionary['command'] = leading_list[1] 
+    if len(leading_list) >= 2:
+        resulting_dictionary['command'] = leading_list[1] 
+    else:
+        resulting_dictionary['command'] = ''
     if no_hash_check(input_string) == False:
         trailing_string = list_separated_by_hash[1]
         resulting_dictionary['tags'] = return_tags(trailing_string)
@@ -388,4 +405,7 @@ if __name__ == '__main__':
 # MAIN CYCLE
     while quit == 1:
         user_command = input('Enter command: ')
-        chief_function(user_command)
+        if initial_input_check(user_command) == True:
+            chief_function(user_command)
+        else:
+            print('gogakal')
