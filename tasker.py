@@ -157,16 +157,27 @@ def initial_input_check(input_string):
     True
 
     >>> initial_input_check('tasker gogakal  ronyal, iskal')
+    True
+
+    >>> initial_input_check('tasker quit')
+    True
+
+    >>> initial_input_check('')
     False
     """
-    check = re.compile('''
-            (\w*\s*)+           # looking for at least one initial word
+    check1 = re.compile('''
+            (\w+\s*)+           # looking for at least one initial word
             [#]                 # looking for a hash symbol
             \s+                 # looking for at least one whitespace after hash symbol
             \w+                 # looking for at least one word after hash symbol (i.e. tag)
             ''', re.VERBOSE)
-    check_result = check.match(input_string)
-    if check_result is not None:
+
+    check2 = re.compile('''
+            (\w+\s*)+           # looking for at least one initial word
+            ''', re.VERBOSE)
+    check1_result = check1.match(input_string)
+    check2_result = check2.match(input_string)
+    if (check1_result is not None) or (check2_result is not None):
         return True
     else:
         return False
