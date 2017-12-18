@@ -1,6 +1,6 @@
-# Version: 13
+# Version: 14
 # Date: 18.12.17
-# Time: 20:55 GMT+5
+# Time: 21:01 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -188,6 +188,7 @@ def chief_function(input_string):
     if input_dictionary['beginning'] == 'tasker':
         command = input_dictionary['command']
         if command == 'add':
+            # TODO change to passing input_dictionary to tasker add command instead of passing string
             tasker_add(input_string)
         elif command == 'quit':
             tasker_quit(ask=1)
@@ -196,17 +197,6 @@ def chief_function(input_string):
     else:
         print('Error!')
 
-def tasker_quit(ask=0):
-    """
-    1>>> tasker_quit(1)
-    1Are you sure to quit? [y] [n] \n
-    """
-    if ask == 1:
-        user_command = input('Are you sure to quit? [y] [n] \n')
-        if user_command == 'y':
-            sys.exit()
-    else:
-        sys.exit()
 
 def tasker_add(task):
     """
@@ -227,6 +217,20 @@ def tasker_add(task):
         a = c.execute("""SELECT * from notes""")
     except Warning:
         return('Error: Shit have happened')
+
+def tasker_quit(ask=0):
+    """
+    1>>> tasker_quit(1)
+    1Are you sure to quit? [y] [n] \n
+    """
+    if ask == 1:
+        user_command = input('Are you sure to quit? [y] [n] \n')
+        if user_command == 'y':
+            sys.exit()
+    else:
+        sys.exit()
+
+
 
 # auxiliary functions
 def tasker_tags():
@@ -406,6 +410,7 @@ if __name__ == '__main__':
     while quit == 1:
         user_command = input('Enter command: ')
         if initial_input_check(user_command) == True:
+            
             chief_function(user_command)
         else:
             print('gogakal')
