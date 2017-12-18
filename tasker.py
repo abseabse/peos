@@ -1,6 +1,6 @@
-# Version: 10
-# Date: 17.12.17
-# Time: 20:16 GMT+5
+# Version: 11
+# Date: 18.12.17
+# Time: 19:53 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -150,10 +150,26 @@ if testmode == 1:
 
 # FUNCTIONS
 # main functions
-def input_check (input_string):
-    #TODO TODO TODO do this function
+def initial_input_check(input_string):
     # The upper layer function, that checks if input is correct in overall.
-    try command_check(input_string):
+    """
+    >>> initial_input_check('tasker gogakal # ronyal, iskal')
+    True
+
+    >>> initial_input_check('tasker gogakal  ronyal, iskal')
+    False
+    """
+    check = re.compile('''
+            (\w*\s*)+           # looking for at least one initial word
+            [#]                 # looking for a hash symbol
+            \s+                 # looking for at least one whitespace after hash symbol
+            \w+                 # looking for at least one word after hash symbol (i.e. tag)
+            ''', re.VERBOSE)
+    check_result = check.match(input_string)
+    if check_result is not None:
+        return True
+    else:
+        return False
 
     
 def chief_function(input_string):
