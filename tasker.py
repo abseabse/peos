@@ -1,6 +1,6 @@
-# Version: 15
+# Version: 16
 # Date: 20.12.17
-# Time: 20:46 GMT+5
+# Time: 21:38 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -189,7 +189,7 @@ def chief_function(input_string):
         command = input_dictionary['command']
         if command == 'add':
             # TODO change to passing input_dictionary to tasker add command instead of passing string
-            tasker_add(input_string)
+            tasker_add(input_dictionary)
         elif command == 'quit':
             tasker_quit(ask=1)
         else:
@@ -198,14 +198,13 @@ def chief_function(input_string):
         print('Error!')
 
 
-def tasker_add(task):
+def tasker_add(input_dictionary):
     """
     >>> tasker_add('tasker # #')
     'Error: Wrong task name'
     """
     if command_check(task) is False:
         return('Error: Wrong task name')  
-    input_dictionary = convert_input_to_dictionary(task)
     try:
         c.execute("""insert into notes VALUES (Null, ?)""", (input_dictionary['command'],))
         note_id_for_insertion = last_record_id('notes')
@@ -260,9 +259,9 @@ def remove_doubled_tags(list_of_tags):
 
     """
     return list(set(list_of_tags))
-    
 
 def command_check(command):
+    #TODO there is a bug! see the test #2 (right command should be 'tasker add gogakal # ronyal, iskal' (missing word 'add'))
     """
     >>> command_check('gogakal # ronyal iskal')
     False
@@ -368,31 +367,48 @@ def no_hash_check(input_string):
 def convert_input_to_dictionary(input_string):
     # the checks behind work poor as dictionaries are not sorted objects, so the order of keys is random. So I've triggered them off
     """
-    # >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
-    # {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
+    >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
+    {'beginning': 'tasker', 'command': 'add', 'note':'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']}
 
-    # >>> convert_input_to_dictionary('tasker')
-    # {'beginning': 'tasker','command': '', 'tags': []}
+    >>> convert_input_to_dictionary('tasker')
+    {'beginning': 'tasker','command': '', 'note':'', 'tags': []}
 
-    # >>> convert_input_to_dictionary('tasker gogakal ronyal iskal')
-    # {'beginning': 'tasker', 'command': 'gogakal', 'tags': []}
+    >>> convert_input_to_dictionary('tasker gogakal ronyal iskal')
+    {'beginning': 'tasker', 'command': 'gogakal', 'note': 'ronyal iskal', 'tags': []}
 
-    # >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , # is kal')
-    # {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
+    >>> convert_input_to_dictionary(' tasker add gogakal # ronyal, iskal , # is kal')
+    {'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']}
     """
     resulting_dictionary = {}
     if no_hash_check(input_string) == True:
         leading_list = input_string.split()
         resulting_dictionary['beginning'] = leading_list[0]
     else:
-        list_separated_by_hash = input_string.split('#', 1)
+        list_separated_by_hash = input_string.strip().split('#', 1)
         leading_string = list_separated_by_hash[0]
-        leading_list = leading_string.split()
+        #FIXME the split below is corrupted (commmented out that line of code and try something new instead (up to the first if statement))
+        # leading_list = leading_string.strip().split(' ', 1)
+        leading_list = leading_string.strip().split(' ', 1)
+        print('initial list ', leading_list)
+        i = 0
+        for item in leading_list:
+            leading_list[0] = item.strip().split(' ', 1)
+            i = i + 1
+            # print('item', item)
+        print('aftewards list ', leading_list)
         resulting_dictionary['beginning'] = leading_list[0]
-    if len(leading_list) >= 2:
-        resulting_dictionary['command'] = leading_list[1] 
-    else:
+    if len(leading_list) == 0:
         resulting_dictionary['command'] = ''
+        resulting_dictionary['note'] = ''
+    elif len(leading_list) == 1:
+        resulting_dictionary['command'] = '' 
+        resulting_dictionary['note'] = ''
+    elif len(leading_list) == 2:
+        resulting_dictionary['command'] = leading_list[1] 
+        resulting_dictionary['note'] = ''
+    else:
+        resulting_dictionary['command'] = leading_list[1]
+        resulting_dictionary['note'] = leading_list[2:]
     if no_hash_check(input_string) == False:
         trailing_string = list_separated_by_hash[1]
         resulting_dictionary['tags'] = return_tags(trailing_string)
