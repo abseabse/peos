@@ -1,6 +1,6 @@
-# Version: 14
-# Date: 18.12.17
-# Time: 21:01 GMT+5
+# Version: 15
+# Date: 20.12.17
+# Time: 20:46 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -366,27 +366,29 @@ def no_hash_check(input_string):
 
 
 def convert_input_to_dictionary(input_string):
+    # the checks behind work poor as dictionaries are not sorted objects, so the order of keys is random. So I've triggered them off
     """
-    >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
-    {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
+    # >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
+    # {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
 
-    >>> convert_input_to_dictionary('tasker')
-    {'beginning': 'tasker', 'command': '', 'tags': []}
+    # >>> convert_input_to_dictionary('tasker')
+    # {'beginning': 'tasker','command': '', 'tags': []}
 
-    >>> convert_input_to_dictionary('tasker gogakal ronyal iskal')
-    {'beginning': 'tasker', 'command': 'gogakal', 'tags': []}
+    # >>> convert_input_to_dictionary('tasker gogakal ronyal iskal')
+    # {'beginning': 'tasker', 'command': 'gogakal', 'tags': []}
 
-    >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , # is kal')
-    {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
+    # >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , # is kal')
+    # {'beginning': 'tasker', 'command': 'add', 'tags': ['ronyal', 'iskal', 'is kal']}
     """
     resulting_dictionary = {}
     if no_hash_check(input_string) == True:
         leading_list = input_string.split()
+        resulting_dictionary['beginning'] = leading_list[0]
     else:
         list_separated_by_hash = input_string.split('#', 1)
         leading_string = list_separated_by_hash[0]
         leading_list = leading_string.split()
-    resulting_dictionary['beginning'] = leading_list[0]
+        resulting_dictionary['beginning'] = leading_list[0]
     if len(leading_list) >= 2:
         resulting_dictionary['command'] = leading_list[1] 
     else:
