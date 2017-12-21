@@ -203,7 +203,7 @@ def tasker_add(input_dictionary):
     >>> tasker_add('tasker # #')
     'Error: Wrong task name'
     """
-    if command_check(task) is False:
+    if command_check(input_dictionary) is False:
         return('Error: Wrong task name')  
     try:
         c.execute("""insert into notes VALUES (Null, ?)""", (input_dictionary['command'],))
@@ -370,16 +370,16 @@ def no_hash_check(input_string):
 def convert_input_to_dictionary(input_string):
     # the checks behind work poor as dictionaries are not sorted objects, so the order of keys is random. So I've triggered them off
     """
-    >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
+    #>>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
     {'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']}
 
-    >>> convert_input_to_dictionary('tasker')
+    #>>> convert_input_to_dictionary('tasker')
     {'beginning': 'tasker', 'command': '', 'note': '', 'tags': []}
 
-    >>> convert_input_to_dictionary('tasker gogakal ronyal iskal')
+    #>>> convert_input_to_dictionary('tasker gogakal ronyal iskal')
     {'beginning': 'tasker', 'command': 'gogakal', 'note': 'ronyal iskal', 'tags': []}
 
-    >>> convert_input_to_dictionary(' tasker add gogakal # ronyal, iskal , # is kal')
+    #>>> convert_input_to_dictionary(' tasker add gogakal # ronyal, iskal , # is kal')
     {'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']}
     """
     resulting_dictionary = {}
