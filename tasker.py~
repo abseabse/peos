@@ -337,6 +337,9 @@ def return_tags(text):
 
     >>> return_tags('goga, mnogo ,,  , kal iskal# ,# ne')
     ['goga', 'mnogo', 'kal iskal', 'ne']
+
+    >>> return_tags('ronyal, iskal, # is kal')
+    ['ronyal', 'iskal', 'is kal']
     """
     initial_list = text.split(',')
     return_list = []
@@ -368,10 +371,10 @@ def convert_input_to_dictionary(input_string):
     # the checks behind work poor as dictionaries are not sorted objects, so the order of keys is random. So I've triggered them off
     """
     >>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
-    {'beginning': 'tasker', 'command': 'add', 'note':'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']}
+    {'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']}
 
     >>> convert_input_to_dictionary('tasker')
-    {'beginning': 'tasker','command': '', 'note':'', 'tags': []}
+    {'beginning': 'tasker', 'command': '', 'note': '', 'tags': []}
 
     >>> convert_input_to_dictionary('tasker gogakal ronyal iskal')
     {'beginning': 'tasker', 'command': 'gogakal', 'note': 'ronyal iskal', 'tags': []}
@@ -381,41 +384,33 @@ def convert_input_to_dictionary(input_string):
     """
     resulting_dictionary = {}
     if no_hash_check(input_string) == True:
-        leading_list = input_string.split()
-        resulting_dictionary['beginning'] = leading_list[0]
+        leading_string = input_string.strip().split(' ', 1)
+        trailing_string = ''
     else:
-        list_separated_by_hash = input_string.strip().split('#', 1)
-        leading_string = list_separated_by_hash[0]
-        #FIXME the split below is corrupted (commmented out that line of code, and try something new up to the first if statement)
-        # leading_list = leading_string.strip().split(' ', 1)
-        leading_list = leading_string.strip().split(' ', 1)
-        print('initial list ', leading_list)
-        i = 0
-        for item in leading_list:
-            leading_list[0] = item.strip().split(' ', 1)
-            i = i + 1
-            # print('item', item)
-        print('aftewards list ', leading_list)
-        resulting_dictionary['beginning'] = leading_list[0]
-    if len(leading_list) == 0:
-        resulting_dictionary['command'] = ''
+        leading_string = input_string.split('#', 1)[0].strip().split(' ', 1)
+        trailing_string = input_string.split('#', 1)[1]
+    additional_list = []
+    for item in leading_string:
+        if len(item.split()) == 1:
+            additional_list.append(item)
+        else:
+            auxiliary_list = item.split(' ', 1)
+            for further_item in auxiliary_list:
+                additional_list.append(str(further_item))
+    resulting_dictionary['beginning'] = additional_list[0]
+    resulting_dictionary['command'] = ''
+    resulting_dictionary['note'] = ''
+    resulting_dictionary['tags'] = []
+    if len(additional_list) > 1:
+        resulting_dictionary['command'] = additional_list[1]
         resulting_dictionary['note'] = ''
-    elif len(leading_list) == 1:
-        resulting_dictionary['command'] = '' 
-        resulting_dictionary['note'] = ''
-    elif len(leading_list) == 2:
-        resulting_dictionary['command'] = leading_list[1] 
-        resulting_dictionary['note'] = ''
-    else:
-        resulting_dictionary['command'] = leading_list[1]
-        resulting_dictionary['note'] = leading_list[2:]
-    if no_hash_check(input_string) == False:
-        trailing_string = list_separated_by_hash[1]
-        resulting_dictionary['tags'] = return_tags(trailing_string)
-    else:
         resulting_dictionary['tags'] = []
+    if len(additional_list) > 2:
+        resulting_dictionary['note'] = additional_list[2]
+        resulting_dictionary['tags'] = []
+    if no_hash_check(input_string) == False:
+        resulting_dictionary['tags'] = return_tags(trailing_string)
     return(resulting_dictionary)
-
 
 # TEST CYCLE
 if __name__ == '__main__':
