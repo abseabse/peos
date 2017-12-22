@@ -187,6 +187,7 @@ def initial_input_check(input_string):
 
     
 def chief_function(input_string):
+    #FIXME rewrite the chief function as there is command_check_dictionary available
     input_dictionary = convert_input_to_dictionary(input_string)
     if input_dictionary['beginning'] == 'tasker':
         command = input_dictionary['command']
@@ -264,7 +265,7 @@ def remove_doubled_tags(list_of_tags):
     return list(set(list_of_tags))
 
 def command_check_dictionary(input_dictionary):
-    #FIXME write the command
+    #FIXME add the check to the chief_function()
     """
     >>> command_check_dictionary('gogakal # ronyal iskal')
     False

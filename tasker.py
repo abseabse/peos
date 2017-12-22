@@ -1,6 +1,6 @@
-# Version: 17
-# Date: 21.12.17
-# Time: 22:00 GMT+5
+# Version: 18
+# Date: 22.12.17
+# Time: 22:37 GMT+5
 
 # IMPORTS
 import sqlite3
