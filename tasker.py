@@ -270,7 +270,7 @@ def tasker_tags():
     return(resulting_dictionary)
         
 def return_tag_id(tag):
-    #TODO write a test
+    #TODO write tests
     tag_id = c.execute("""SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag))
     for item in tag_id:
         return(item)
