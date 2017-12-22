@@ -249,7 +249,7 @@ def tasker_add_check(input_dictionary):
     False
     """
     # Step 0: checks if input contains necessary keys 'beginning', 'command'
-    # is in the previous more general function - command_check_dictionary()
+    # are in the previous more general function - command_check_dictionary()
     # Step 1: check if note is entered
     if input_dictionary['note'] == '':
         return False
