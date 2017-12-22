@@ -1,6 +1,6 @@
-# Version: 19
-# Date: 22.12.17
-# Time: 23:50 GMT+5
+# Version: 20
+# Date: 23.12.17
+# Time: 00:48 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -198,14 +198,18 @@ def chief_function(input_string):
             tasker_quit(ask=1)
 
 
-
 def tasker_add(input_dictionary):
     """
-    >>> tasker_add('tasker # #')
-    'Error: Wrong task name'
+    >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+   
+    >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': []})
+    'Error in task entered'
+
+    >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
+    'Error in task entered'
     """
-    if command_check(input_dictionary) is False:
-        return('Error: Wrong task name')  
+    if tasker_add_check(input_dictionary) is False:
+        return('Error in task entered')  
     try:
         c.execute("""insert into notes VALUES (Null, ?)""", (input_dictionary['command'],))
         note_id_for_insertion = last_record_id('notes')
@@ -233,6 +237,27 @@ def tasker_quit(ask=0):
 
 
 # auxiliary functions
+def tasker_add_check(input_dictionary):
+    """
+    >>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+    True
+
+    >>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
+    False
+
+    >>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': []})
+    False
+    """
+    # Step 0: checks if input contains necessary keys 'beginning', 'command'
+    # is in the previous more general function - command_check_dictionary()
+    # Step 1: check if note is entered
+    if input_dictionary['note'] == '':
+        return False
+    # Step 2: check if at least one tag is entered
+    if input_dictionary['tags'] == []:
+        return False
+    return True
+
 def tasker_tags():
     #TODO write tests
     list_of_tags = c.execute("""SELECT tag FROM tags""")
@@ -262,7 +287,6 @@ def remove_doubled_tags(list_of_tags):
     return list(set(list_of_tags))
 
 def command_check_dictionary(input_dictionary):
-    #FIXME add the check to the chief_function()
     """
     >>> command_check_dictionary('gogakal # ronyal iskal')
     False
@@ -300,11 +324,6 @@ def command_check_dictionary(input_dictionary):
         return(False)
     return(True)
 
-def command_check(command):
-    #FIXME wipe off this command as it is obsolete
-    return True
-
-
 def last_record(table):
     #TODO deal with possible sql-injection in the function
     #TODO write a test
@@ -313,12 +332,10 @@ def last_record(table):
             (table_name=table))
     return(resulting_last_record)
 
-
 def last_record_id(table):
     last_record_cursor = last_record(table)
     for item in last_record_cursor:
         return(item[0])
-
 
 def return_tags(text):
     """
@@ -412,8 +429,6 @@ if __name__ == '__main__':
 # MAIN CYCLE
     while quit == 1:
         user_command = input('Enter command: ')
-        #TODO decide if initial_input_check() is necessary, as 
-        # there is a check in chief_function()
         if initial_input_check(user_command) == True: 
             chief_function(user_command)
         else:
