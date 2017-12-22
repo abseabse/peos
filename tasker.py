@@ -1,6 +1,6 @@
-# Version: 18
+# Version: 19
 # Date: 22.12.17
-# Time: 22:37 GMT+5
+# Time: 23:50 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -187,19 +187,16 @@ def initial_input_check(input_string):
 
     
 def chief_function(input_string):
-    #FIXME rewrite the chief function as there is command_check_dictionary available
     input_dictionary = convert_input_to_dictionary(input_string)
-    if input_dictionary['beginning'] == 'tasker':
+    if command_check_dictionary(input_dictionary) == False:
+        print('Error: Wrong input string. To quit type: tasker quit')
+    else:
         command = input_dictionary['command']
         if command == 'add':
-            # TODO change to passing input_dictionary to tasker add command instead of passing string
             tasker_add(input_dictionary)
-        elif command == 'quit':
+        if command == 'quit':
             tasker_quit(ask=1)
-        else:
-            print('No such a command!')
-    else:
-        print('Error!')
+
 
 
 def tasker_add(input_dictionary):
@@ -219,7 +216,7 @@ def tasker_add(input_dictionary):
                     (note_id_for_insertion, tag_id_for_insertion))
         a = c.execute("""SELECT * from notes""")
     except Warning:
-        return('Error: Shit have happened')
+        return('Error: Shit has happened')
 
 def tasker_quit(ask=0):
     """
@@ -415,8 +412,9 @@ if __name__ == '__main__':
 # MAIN CYCLE
     while quit == 1:
         user_command = input('Enter command: ')
-        if initial_input_check(user_command) == True:
-            
+        #TODO decide if initial_input_check() is necessary, as 
+        # there is a check in chief_function()
+        if initial_input_check(user_command) == True: 
             chief_function(user_command)
         else:
             print('gogakal')
