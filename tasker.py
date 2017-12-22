@@ -8,8 +8,11 @@ import sys
 import re
 
 # GLOBAL VARIABLES
-testmode = 1    # if value == 1, then test block will be executed, otherwise not
-quit = 1
+testmode = 1    # if value == 1, then test block will be executed, 
+                # otherwise not
+quit = 1        # TODO add a note what that variable is for
+command_list = ['add', 'quit']  # list of commands available,
+                                # used in command_check_dictionary()
 
 
 conn = sqlite3.connect('example.db')
@@ -184,6 +187,7 @@ def initial_input_check(input_string):
 
     
 def chief_function(input_string):
+    #FIXME rewrite the chief function as there is command_check_dictionary available
     input_dictionary = convert_input_to_dictionary(input_string)
     if input_dictionary['beginning'] == 'tasker':
         command = input_dictionary['command']
@@ -260,59 +264,48 @@ def remove_doubled_tags(list_of_tags):
     """
     return list(set(list_of_tags))
 
+def command_check_dictionary(input_dictionary):
+    #FIXME add the check to the chief_function()
+    """
+    >>> command_check_dictionary('gogakal # ronyal iskal')
+    False
+
+    >>> command_check_dictionary({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+    True
+
+    >>> command_check_dictionary({'beginning': 'add', 'command': 'gogakal', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
+    False
+
+    >>> command_check_dictionary({'beginning': 'tasker', 'command': 'add1', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+    False
+    """
+    # The first step: check if the type of the input is a dictionary
+    if type(input_dictionary) != type({}):
+        return(False)
+    # The second step: check if the input contains all necessary elements:
+    #   - beginning
+    #   - command
+    #   - note
+    #   - tags
+    if 'beginning' not in input_dictionary:
+        return(False)
+    if 'command' not in input_dictionary:
+        return(False)
+    if 'note' not in input_dictionary:
+        return(False)
+    if 'tags' not in input_dictionary:
+        return(False)
+    # The third step: check if input contains specific beginning 'tasker'
+    if input_dictionary['beginning'] != 'tasker':
+        return(False)
+    # the fourth step: check if input contains actual command
+    if input_dictionary['command'] not in command_list:
+        return(False)
+    return(True)
+
 def command_check(command):
-    #TODO there is a bug! see the test #2 (right command should be 'tasker add gogakal # ronyal, iskal' (missing word 'add'))
-    """
-    >>> command_check('gogakal # ronyal iskal')
-    False
-
-    >>> command_check('tasker gogakal # ronyal iskal')
-    True
-    
-    >>> command_check('  tasker gogakal # ronyal iskal')
-    True
-
-    >>> command_check('  taskergogakal # ronyal iskal')
-    False
-
-    >>> command_check('  tasker   gogakal # ronyal iskal')
-    True
-
-    >>> command_check('  tasker   gogakal  gogakal   # ronyal iskal')
-    True
-    
-    >>> command_check('  tasker   gogakal ## ronyal iskal')
-    False
-
-    >>> command_check('  tasker   gogakal # # ronyal iskal')
-    False
-
-    >>> command_check('  tasker   gogakal # ronyal, iskal')
-    True
-
-    >>> command_check('  tasker   gogakal # ronyal, iskal # kal')
-    False
-
-    >>> command_check('  tasker   gogakal #')
-    False
-
-    >>> command_check('  tasker   gogakal # ')
-    False
-    """
-    check1 = re.compile('''[#]''')
-    check2 = re.compile('''
-            ^\s*                # skipping leading whitespaces
-            tasker              # looking for the initial command
-            \s+                 # skipping trailing whitespaces
-            (\w*\s)+            # skipping note string 
-            [#]{1}              # looking for one hash symbol 
-            \s+                 # looking for trailing whitespaces
-            \w                  # looking for at least 1 tag
-            ''', re.VERBOSE)
-    if (len(check1.findall(command))>1) or (check2.match(command) is None):
-        return False
-    else:
-        return True
+    #FIXME wipe off this command as it is obsolete
+    return True
 
 
 def last_record(table):
@@ -368,7 +361,7 @@ def no_hash_check(input_string):
 
 
 def convert_input_to_dictionary(input_string):
-    # the checks behind work poor as dictionaries are not sorted objects, so the order of keys is random. So I've triggered them off
+    # the checks behind work poor as dictionaries are not sorted objects, so the order of keys is random. So I've triggered tests off
     """
     #>>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
     {'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']}
