@@ -1,6 +1,6 @@
-# Version: 20
-# Date: 23.12.17
-# Time: 00:48 GMT+5
+# Version: 21
+# Date: 24.12.17
+# Time: 11:42 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -10,7 +10,6 @@ import re
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then test block will be executed, 
                 # otherwise not
-quit = 1        # TODO add a note what that variable is for
 command_list = ['add', 'quit']  # list of commands available,
                                 # used in command_check_dictionary()
 
@@ -249,7 +248,7 @@ def tasker_add_check(input_dictionary):
     False
     """
     # Step 0: checks if input contains necessary keys 'beginning', 'command'
-    # is in the previous more general function - command_check_dictionary()
+    # are in the previous more general function - command_check_dictionary()
     # Step 1: check if note is entered
     if input_dictionary['note'] == '':
         return False
@@ -259,7 +258,7 @@ def tasker_add_check(input_dictionary):
     return True
 
 def tasker_tags():
-    #TODO write tests
+    #TODO write tests, see issue 20
     list_of_tags = c.execute("""SELECT tag FROM tags""")
     resulting_dictionary = {}
     for tag in list_of_tags:
@@ -270,7 +269,7 @@ def tasker_tags():
     return(resulting_dictionary)
         
 def return_tag_id(tag):
-    #TODO write tests
+    #TODO write tests, see issue 21
     tag_id = c.execute("""SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag))
     for item in tag_id:
         return(item)
@@ -325,8 +324,8 @@ def command_check_dictionary(input_dictionary):
     return(True)
 
 def last_record(table):
-    #TODO deal with possible sql-injection in the function
-    #TODO write a test
+    #TODO deal with possible sql-injection in the function, see issue 22
+    #TODO write tests, see issue 23
     resulting_last_record = c.execute("""select * from {table_name} 
             where ROWID = (SELECT MAX(ROWID) from {table_name})""".format
             (table_name=table))
@@ -359,7 +358,7 @@ def return_tags(text):
     return(return_list)
 
 def only_one_hash_check(input_string):
-    #TODO merge with no_hash_check()
+    #TODO merge with no_hash_check(), see issue 24
     check = re.compile('''[#]''')
     if len(check.findall(input_string)) == 1:
         return True
@@ -427,6 +426,7 @@ if __name__ == '__main__':
 
 
 # MAIN CYCLE
+    quit = 1
     while quit == 1:
         user_command = input('Enter command: ')
         if initial_input_check(user_command) == True: 
