@@ -1,6 +1,6 @@
-# Version: 21
+# Version: 22
 # Date: 24.12.17
-# Time: 12:02 GMT+5
+# Time: 12:04 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -357,13 +357,6 @@ def return_tags(text):
             return_list.append(tag_cleared_from_hashtags.strip())
     return(return_list)
 
-def only_one_hash_check(input_string):
-    #TODO merge with no_hash_check(), see issue 24
-    check = re.compile('''[#]''')
-    if len(check.findall(input_string)) == 1:
-        return True
-    else:
-        return False
 
 def no_hash_check(input_string):
     check = re.compile('''[#]''')
