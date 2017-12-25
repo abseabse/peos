@@ -1,6 +1,6 @@
-# Version: 22
-# Date: 24.12.17
-# Time: 12:04 GMT+5
+# Version: 25
+# Date: 25.12.17
+# Time: 21:47 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -155,17 +155,20 @@ if testmode == 1:
 def initial_input_check(input_string):
     # The upper layer function, that checks if input is correct in overall.
     """
-    >>> initial_input_check('tasker gogakal # ronyal, iskal')
+    #>>> initial_input_check('tasker gogakal # ronyal, iskal')
     True
 
-    >>> initial_input_check('tasker gogakal  ronyal, iskal')
+    #>>> initial_input_check('tasker gogakal  ronyal, iskal')
     True
 
-    >>> initial_input_check('tasker quit')
+    #>>> initial_input_check('tasker quit')
     True
 
-    >>> initial_input_check('')
+    #>>> initial_input_check('')
     False
+
+    #>>> clear_all()
+
     """
     check1 = re.compile('''
             (\w+\s*)+           # looking for at least one initial word
@@ -199,13 +202,19 @@ def chief_function(input_string):
 
 def tasker_add(input_dictionary):
     """
-    >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
    
-    >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': []})
+    #>>> tasker_tags()
+    {'ronyal': 1, 'iskal': 1, 'is kal': 1}
+
+    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': []})
     'Error in task entered'
 
-    >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
+    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
     'Error in task entered'
+
+    #>>> clear_all()
+
     """
     if tasker_add_check(input_dictionary) is False:
         return('Error in task entered')  
@@ -215,11 +224,42 @@ def tasker_add(input_dictionary):
         for tag in input_dictionary['tags']:
             c.execute("""insert into tags VALUES (Null, ?)""", (tag,))
             tag_id_for_insertion = last_record_id('tags')
+            # Currenty here
+            # a = c.execute('''SELECT * from tags''')
+            # for item in a:
+            #     print('tag ', tag, item)
             c.execute("""insert into notes_tags VALUES (?, ?)""", 
                     (note_id_for_insertion, tag_id_for_insertion))
-        a = c.execute("""SELECT * from notes""")
     except Warning:
         return('Error: Shit has happened')
+
+
+# def return_notes(tag):
+    # an auxiliary function that returns list of notes with the tag provided
+    #FIXME! there is a bug in the function - for some strange reason 
+    # the function cannot add the second note in the test 2.
+    """
+    # >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+
+    # >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['iskal', 'is kal']})
+
+    # >>> return_notes(['ronyal'])
+    [1]
+
+    # >>> return_notes(['iskal'])
+    [1, 2]
+
+    # >>> clear_all()
+
+    """
+    # tag_id = return_tag_id(tag)
+    # notes_cursor = c.execute('''SELECT ID_note from notes_tags''')
+    # notes_cursor = c.execute('''SELECT ID_note from notes_tags WHERE (ID_tag = ?)''', (tag_id))
+    # auxiliary_list = []
+    # for item in notes_cursor:
+    #     auxiliary_list.append(item[0])
+    # return auxiliary_list
+
 
 def tasker_quit(ask=0):
     """
@@ -238,14 +278,17 @@ def tasker_quit(ask=0):
 # auxiliary functions
 def tasker_add_check(input_dictionary):
     """
-    >>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+    #>>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
     True
 
-    >>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
+    #>>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
     False
 
-    >>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': []})
+    #>>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': []})
     False
+
+    #>>> clear_all()
+
     """
     # Step 0: checks if input contains necessary keys 'beginning', 'command'
     # are in the previous more general function - command_check_dictionary()
@@ -259,44 +302,73 @@ def tasker_add_check(input_dictionary):
 
 def tasker_tags():
     #TODO write tests, see issue 20
+    #TODO rewrite the function to use 1 joined query instead of 2 separated, see issue 28
+    """
+    #>>> tasker_tags()
+    {}
+
+    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['iskal', 'ronyal', 'is kal']})
+   
+    #>>> tasker_tags()
+    {'ronyal': 1, 'iskal': 1, 'is kal': 1}
+
+    #>>> clear_all()
+
+    """
+    # initializing tag directory as there are subsequnt queries with the same coursor 'c' and thus the whole thing won't work otherwise 
     list_of_tags = c.execute("""SELECT tag FROM tags""")
     resulting_dictionary = {}
     for tag in list_of_tags:
+        resulting_dictionary[tag[0]] = 0
+    for tag in resulting_dictionary:
         tag_id = return_tag_id(tag)
-        number_of_notes = c.execute("""SELECT COUNT(*) FROM notes_tags WHERE                                        (ID_tag = ?)""", (tag_id))
+        number_of_notes = c.execute("""SELECT COUNT(*) FROM notes_tags WHERE (ID_tag = ?)""", (tag_id))
         for item in number_of_notes:
-            resulting_dictionary[tag[0]] = item[0]
+            resulting_dictionary[tag] = item[0]
     return(resulting_dictionary)
         
 def return_tag_id(tag):
     #TODO write tests, see issue 21
-    tag_id = c.execute("""SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag))
+    """
+    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['iskal', 'ronyal', 'is kal']})
+    
+    #>>> return_tag_id(('iskal',))
+    (1,)
+
+    #>>> return_tag_id(('ronyal',))
+    (2,)
+
+    #>>> return_tag_id(('is kal',))
+    (3,)
+
+    #>>> clear_all()
+    """
+    tag_id = c.execute("""SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag,))
     for item in tag_id:
-        return(item)
+        return item
 
 def remove_doubled_tags(list_of_tags):
     """
-    >>> remove_doubled_tags(['kal'])
+    #>>> remove_doubled_tags(['kal'])
     ['kal']
 
-    >>> remove_doubled_tags(['kal', 'kal'])
+    #>>> remove_doubled_tags(['kal', 'kal'])
     ['kal']
-
     """
     return list(set(list_of_tags))
 
 def command_check_dictionary(input_dictionary):
     """
-    >>> command_check_dictionary('gogakal # ronyal iskal')
+    #>>> command_check_dictionary('gogakal # ronyal iskal')
     False
 
-    >>> command_check_dictionary({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+    #>>> command_check_dictionary({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
     True
 
-    >>> command_check_dictionary({'beginning': 'add', 'command': 'gogakal', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
+    #>>> command_check_dictionary({'beginning': 'add', 'command': 'gogakal', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
     False
 
-    >>> command_check_dictionary({'beginning': 'tasker', 'command': 'add1', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+    #>>> command_check_dictionary({'beginning': 'tasker', 'command': 'add1', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
     False
     """
     # The first step: check if the type of the input is a dictionary
@@ -338,13 +410,13 @@ def last_record_id(table):
 
 def return_tags(text):
     """
-    >>> return_tags('goga, mnogo ,,  , kal iskal, ne')
+    #>>> return_tags('goga, mnogo ,,  , kal iskal, ne')
     ['goga', 'mnogo', 'kal iskal', 'ne']
 
-    >>> return_tags('goga, mnogo ,,  , kal iskal# ,# ne')
+    #>>> return_tags('goga, mnogo ,,  , kal iskal# ,# ne')
     ['goga', 'mnogo', 'kal iskal', 'ne']
 
-    >>> return_tags('ronyal, iskal, # is kal')
+    #>>> return_tags('ronyal, iskal, # is kal')
     ['ronyal', 'iskal', 'is kal']
     """
     initial_list = text.split(',')
@@ -410,6 +482,27 @@ def convert_input_to_dictionary(input_string):
     if no_hash_check(input_string) == False:
         resulting_dictionary['tags'] = return_tags(trailing_string)
     return(resulting_dictionary)
+
+# auxiliary functions for test purpose only (used only in doctests)
+def clear_all():
+    # nuclear-type function that erases all the entered notes and tags
+    # TODO Make clear_all() more specific (or write another function) as there are nested tests (and uncomment all the tests in the module afterwards)
+    # see issue 29
+    """
+    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
+    
+    #>>> tasker_tags()
+    {'ronyal': 1}
+    
+    #>>> clear_all()
+
+    #>>> tasker_tags()
+    {}
+    """
+    c.execute('''DELETE FROM notes_tags''')
+    c.execute('''DELETE FROM notes''')
+    c.execute('''DELETE from tags''')
+    conn.commit()
 
 # TEST CYCLE
 if __name__ == '__main__':
