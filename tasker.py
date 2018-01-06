@@ -1,6 +1,6 @@
 # Version: 26
 # Date: 6.1.18
-# Time: 15:13 GMT+5
+# Time: 15:51 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -8,7 +8,7 @@ import sys
 import re
 
 # GLOBAL VARIABLES
-testmode = 1    # if value == 1, then test block will be executed, 
+testmode = 1    # if value == 1, then doctest blocks will be executed, 
                 # otherwise not
 command_list = ['add', 'quit']  # list of commands available,
                                 # used in command_check_dictionary()
@@ -35,123 +35,6 @@ def create_tables(cursor, connection):
     connection.commit()
 
 create_tables(c, conn)
-
-
-# TEST BLOCK FOR TABLES
-# test 1: table notes is functioning
-if testmode == 1:
-    try:
-        c.execute("insert into notes VALUES (1, 'gogakal')")
-        conn.commit()
-    except:
-        print('test 1 failed')
-    else:
-        c.execute("delete from notes")
-        conn.commit()
-        print('test 1 passed')
-
-# test 2: in table notes ID_note is a primary key
-if testmode == 1:
-    try:
-        c.execute("insert into notes VALUES(1, 'gogakal')")
-        c.execute("insert into notes VALUES(1, 'gogakal2')")
-        conn.commit()
-    except:
-        c.execute("delete from notes")
-        print('test 2 passed')
-    else:
-        c.execute("delete from notes")
-        conn.commit()
-        print('test 2 failed')
-
-# test 3: table tags is functioning
-if testmode == 1:
-    try:
-        c.execute("insert into tags VALUES (1, 'o kale')")
-        conn.commit()
-    except:
-        print('test 3 failed')
-    else:
-        c.execute("delete from tags")
-        conn.commit()
-        print('test 3 passed')
-
-# test 4: in table tags ID_tag is a primary key
-if testmode == 1:
-    try:
-        c.execute("insert into tags VALUES ('1, 'o kale')")
-        c.execute("insert into tags VALUES ('1, 'o fekale')")
-        conn.commit()
-    except:
-        print('test 4 passed')
-    else:
-        c.execute("delete from tags")
-        conn.commit()
-        print('test 4 failed')
-
-# test 5: in table notes_tags both attributes goes with not null constraint
-if testmode == 1:
-    try:
-        c.execute("""insert into notes_tags VALUES (null, null)""")
-        conn.commit()
-    except:
-        print('test 5 passed')
-    else:
-        c.execute("delete from notes_tags")
-        conn.commit()
-        print('test 5 failed')
-
-# test 6: table notes_tags is working in overall
-
-if testmode == 1:
-    try:
-        c.execute("""insert into notes VALUES (1, 'goga')""")
-        c.execute("""insert into tags VALUES (2, 'kal')""")
-        c.execute("""insert into notes_tags VALUES (1, 2)""")
-    except:
-        print('test 6 failed')
-    else:
-        c.execute("delete from notes_tags")
-        c.execute("delete from notes")
-        c.execute("delete from tags")
-        conn.commit()
-        print('test 6 passed')
-
-# test 7: in table notes_tags both attributes are foreign keys
-if testmode == 1:
-    try:
-        c.execute("""insert into notes_tags VALUES (1, 2)""")
-        conn.commit()
-    except:
-        print('test 7 passed')
-    else:
-        c.execute("delete from notes_tags")
-        conn.commit()
-        print('test 7 failed')
-
-# test 8: in table notes_tags both attributes form a complex primary key
-if testmode == 1:
-    try:
-        c.execute("""insert into notes VALUES (1, 'goga')""")
-        c.execute("""insert into tags VALUES (2, 'kal')""")
-        c.execute("""insert into notes_tags VALUES (1, 2)""")
-        c.execute("""insert into notes_tags VALUES (1, 2)""")
-        conn.commit()
-    except:
-        print('test 8 passed')
-    else:
-        c.execute("delete from notes_tags")
-        c.execute("delete from notes")
-        c.execute("delete from tags")
-        print('test 8 failed')
-        conn.commit()
-
-# test_last: clearing tables
-if testmode == 1:
-    c.execute("delete from notes_tags")
-    c.execute("delete from notes")
-    c.execute("delete from tags")
-    conn.commit()
 
 
 # FUNCTIONS
@@ -490,8 +373,6 @@ def convert_input_to_dictionary(input_string):
 # auxiliary functions for test purpose only (used only in doctests)
 def clear_all():
     # nuclear-type function that erases all the entered notes and tags
-    # TODO Make clear_all() more specific (or write another function) as there are nested tests (and uncomment all the tests in the module afterwards)
-    # see issue 29
     """
     #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
     
@@ -507,6 +388,14 @@ def clear_all():
     c.execute('''DELETE FROM notes''')
     c.execute('''DELETE from tags''')
     conn.commit()
+
+def drop_tables(cursor, connection):
+    # nuclear-type function that drops all the tables in the database.
+    # (need to perform tests in test.py module).
+    cursor.execute('''DROP TABLE notes_tags''')
+    cursor.execute('''DROP TABLE notes''')
+    cursor.execute('''DROP TABLE tags''')
+    connection.commit()
 
 # TEST CYCLE
 if __name__ == '__main__':
