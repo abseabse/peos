@@ -1,6 +1,6 @@
-# Version: 25
-# Date: 25.12.17
-# Time: 21:47 GMT+5
+# Version: 26
+# Date: 6.1.18
+# Time: 15:13 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -19,19 +19,23 @@ c = conn.cursor()
 c.execute('''pragma foreign_keys = on''')
 
 # CREATING TABLES
-c.execute('''CREATE TABLE IF NOT EXISTS notes (
-        ID_note integer primary key, 
-        note text)''')
-c.execute('''CREATE TABLE IF NOT EXISTS tags (
-        ID_tag integer primary key, 
-        tag text)''')
-c.execute('''CREATE TABLE IF NOT EXISTS notes_tags (
-        ID_note integer not null,
-        ID_tag integer not null,
-        foreign key (ID_note) references notes(ID_note),
-        foreign key (ID_tag) references tags(ID_tag),
-        primary key (ID_note, ID_tag))''')
-conn.commit()
+def create_tables(cursor, connection):
+    cursor.execute('''CREATE TABLE IF NOT EXISTS notes (
+            ID_note integer primary key, 
+            note text)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS tags (
+            ID_tag integer primary key, 
+            tag text)''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS notes_tags (
+            ID_note integer not null,
+            ID_tag integer not null,
+            foreign key (ID_note) references notes(ID_note),
+            foreign key (ID_tag) references tags(ID_tag),
+            primary key (ID_note, ID_tag))''')
+    connection.commit()
+
+create_tables(c, conn)
+
 
 # TEST BLOCK FOR TABLES
 # test 1: table notes is functioning
