@@ -1,6 +1,6 @@
-# Version: 26
+# Version: 27
 # Date: 6.1.18
-# Time: 15:51 GMT+5
+# Time: 16:44 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -20,6 +20,7 @@ c.execute('''pragma foreign_keys = on''')
 
 # CREATING TABLES
 def create_tables(cursor, connection):
+    # tests are in tests.py
     cursor.execute('''CREATE TABLE IF NOT EXISTS notes (
             ID_note integer primary key, 
             note text)''')
@@ -40,28 +41,16 @@ create_tables(c, conn)
 # FUNCTIONS
 # main functions
 def initial_input_check(input_string):
-    # The upper layer function, that checks if input is correct in overall.
-    """
-    #>>> initial_input_check('tasker gogakal # ronyal, iskal')
-    True
-
-    #>>> initial_input_check('tasker gogakal  ronyal, iskal')
-    True
-
-    #>>> initial_input_check('tasker quit')
-    True
-
-    #>>> initial_input_check('')
-    False
-
-    #>>> clear_all()
-
-    """
+    # The upper layer function, that checks if the 
+    # input is correct in overall.
+    # tests are in tests.py
     check1 = re.compile('''
-            (\w+\s*)+           # looking for at least one initial word
-            [#]                 # looking for a hash symbol
-            \s+                 # looking for at least one whitespace after hash symbol
-            \w+                 # looking for at least one word after hash symbol (i.e. tag)
+            (\w+\s*)+           # looking for at least one initial word;
+            [#]                 # looking for a hash symbol;
+            \s+                 # looking for at least one whitespace 
+                                # after hash symbol;
+            \w+                 # looking for at least one word after 
+                                # hash symbol (i.e. tag).
             ''', re.VERBOSE)
 
     check2 = re.compile('''
@@ -76,6 +65,7 @@ def initial_input_check(input_string):
 
     
 def chief_function(input_string):
+    #TODO think about adding tests, see issue #32
     input_dictionary = convert_input_to_dictionary(input_string)
     if command_check_dictionary(input_dictionary) == False:
         print('Error: Wrong input string. To quit type: tasker quit')
@@ -88,23 +78,9 @@ def chief_function(input_string):
 
 
 def tasker_add(input_dictionary):
-    """
-    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
-   
-    #>>> tasker_tags()
-    {'ronyal': 1, 'iskal': 1, 'is kal': 1}
-
-    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': []})
-    'Error in task entered'
-
-    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
-    'Error in task entered'
-
-    #>>> clear_all()
-
-    """
+    # tests are in tests.py
     if tasker_add_check(input_dictionary) is False:
-        return('Error in task entered')  
+        raise Warning('Shit has happened')
     try:
         c.execute("""insert into notes VALUES (Null, ?)""", (input_dictionary['command'],))
         note_id_for_insertion = last_record_id('notes')
