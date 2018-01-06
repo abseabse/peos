@@ -1,6 +1,6 @@
-# Version: 29
+# Version: 30
 # Date: 6.1.18
-# Time: 20:55 GMT+5
+# Time: 22:14 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -148,77 +148,38 @@ def tasker_add_check(input_dictionary):
     return True
 
 def tasker_tags(cursor, connection):
-    #TODO write tests, see issue 20
-    #TODO rewrite the function to use 1 joined query instead of 2 separated, see issue 28
-    #tests are in tests.py
-    """
-    >>> tasker_tags()
-    {}
-
-    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['iskal', 'ronyal', 'is kal']})
-   
-    #>>> tasker_tags()
-    {'ronyal': 1, 'iskal': 1, 'is kal': 1}
-
-    #>>> clear_all()
-
-    """
-    # initializing tag directory as there are subsequnt queries with the same coursor 'c' and thus the whole thing won't work otherwise 
+    # tests are in tests.py
+    # TODO rewrite the function to use 1 joined query instead of 2 separated, see issue #28
     list_of_tags = cursor.execute("""SELECT tag FROM tags""")
+    # initializing tag dictionary as there are subsequnt queries with 
+    # the same cursor and thus the whole thing won't work otherwise
     resulting_dictionary = {}
     for tag in list_of_tags:
         resulting_dictionary[tag[0]] = 0
     for tag in resulting_dictionary:
         tag_id = return_tag_id(cursor, connection, tag)
-        number_of_notes = cursor.execute("""SELECT COUNT(*) FROM notes_tags WHERE (ID_tag = ?)""", (tag_id))
+        number_of_notes = cursor.execute(
+                """SELECT COUNT(*) FROM notes_tags WHERE (ID_tag = ?)""", 
+                (tag_id)
+                )
         for item in number_of_notes:
             resulting_dictionary[tag] = item[0]
     return(resulting_dictionary)
         
 def return_tag_id(cursor, connection, tag):
-    #TODO write tests, see issue 21
-    """
-    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['iskal', 'ronyal', 'is kal']})
-    
-    #>>> return_tag_id(('iskal',))
-    (1,)
-
-    #>>> return_tag_id(('ronyal',))
-    (2,)
-
-    #>>> return_tag_id(('is kal',))
-    (3,)
-
-    #>>> clear_all()
-    """
-    tag_id = cursor.execute("""SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag,))
+    # tests are in tests.py
+    tag_id = cursor.execute(
+            """SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag,)
+            )
     for item in tag_id:
         return item
 
 def remove_doubled_tags(list_of_tags):
-    """
-    #>>> remove_doubled_tags(['kal'])
-    ['kal']
-
-    #>>> remove_doubled_tags(['kal', 'kal'])
-    ['kal']
-    """
+    # tests are in tests.py
     return list(set(list_of_tags))
 
 def command_check_dictionary(input_dictionary):
-    """
-    #>>> command_check_dictionary('gogakal # ronyal iskal')
-    False
-
-    #>>> command_check_dictionary({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
-    True
-
-    #>>> command_check_dictionary({'beginning': 'add', 'command': 'gogakal', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
-    False
-
-    #>>> command_check_dictionary({'beginning': 'tasker', 'command': 'add1', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
-    False
-    """
+    # tests are in tests.py
     # The first step: check if the type of the input is a dictionary
     if type(input_dictionary) != type({}):
         return(False)
@@ -257,16 +218,7 @@ def last_record_id(cursor, connection, table):
         return(item[0])
 
 def return_tags(text):
-    """
-    #>>> return_tags('goga, mnogo ,,  , kal iskal, ne')
-    ['goga', 'mnogo', 'kal iskal', 'ne']
-
-    #>>> return_tags('goga, mnogo ,,  , kal iskal# ,# ne')
-    ['goga', 'mnogo', 'kal iskal', 'ne']
-
-    #>>> return_tags('ronyal, iskal, # is kal')
-    ['ronyal', 'iskal', 'is kal']
-    """
+    # tests are in tests.py
     initial_list = text.split(',')
     return_list = []
     for tag in initial_list:
@@ -287,20 +239,7 @@ def no_hash_check(input_string):
 
 
 def convert_input_to_dictionary(input_string):
-    # the checks behind work poor as dictionaries are not sorted objects, so the order of keys is random. So I've triggered tests off
-    """
-    #>>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal , is kal')
-    {'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']}
-
-    #>>> convert_input_to_dictionary('tasker')
-    {'beginning': 'tasker', 'command': '', 'note': '', 'tags': []}
-
-    #>>> convert_input_to_dictionary('tasker gogakal ronyal iskal')
-    {'beginning': 'tasker', 'command': 'gogakal', 'note': 'ronyal iskal', 'tags': []}
-
-    #>>> convert_input_to_dictionary(' tasker add gogakal # ronyal, iskal , # is kal')
-    {'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']}
-    """
+    # tests are in tests.py
     resulting_dictionary = {}
     if no_hash_check(input_string) == True:
         leading_string = input_string.strip().split(' ', 1)
@@ -332,23 +271,13 @@ def convert_input_to_dictionary(input_string):
     return(resulting_dictionary)
 
 # auxiliary functions for test purpose only (used only in doctests)
-def clear_all():
+def clear_all(cursor, connection):
     # nuclear-type function that erases all the entered notes and tags
-    """
-    #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
-    
-    #>>> tasker_tags()
-    {'ronyal': 1}
-    
-    #>>> clear_all()
-
-    #>>> tasker_tags()
-    {}
-    """
-    c.execute('''DELETE FROM notes_tags''')
-    c.execute('''DELETE FROM notes''')
-    c.execute('''DELETE from tags''')
-    conn.commit()
+    # tests are in tests.py
+    cursor.execute('''DELETE FROM notes_tags''')
+    cursor.execute('''DELETE FROM notes''')
+    cursor.execute('''DELETE from tags''')
+    connection.commit()
 
 def drop_tables(cursor, connection):
     # nuclear-type function that drops all the tables in the database.
