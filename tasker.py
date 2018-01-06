@@ -1,11 +1,13 @@
-# Version: 31
+# Version: 32
 # Date: 6.1.18
-# Time: 22:21 GMT+5
+# Time: 22:26 GMT+5
+
 
 # IMPORTS
 import sqlite3
 import sys
 import re
+
 
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then doctest blocks will be executed, 
@@ -13,9 +15,8 @@ testmode = 1    # if value == 1, then doctest blocks will be executed,
 command_list = ['add', 'quit']  # list of commands available,
                                 # used in command_check_dictionary()
 
-
-
-# CREATING TABLES
+# FUNCTIONS
+# table functions
 def create_tables(cursor, connection):
     # tests are in tests.py
     cursor.execute('''CREATE TABLE IF NOT EXISTS notes (
@@ -32,10 +33,6 @@ def create_tables(cursor, connection):
             primary key (ID_note, ID_tag))''')
     connection.commit()
 
-
-
-
-# FUNCTIONS
 # main functions
 def initial_input_check(input_string):
     # The upper layer function, that checks if the 
@@ -94,7 +91,6 @@ def tasker_add(cursor, connection, input_dictionary):
     except Warning:
         return('Error: Shit has happened')
 
-
 # def return_notes(tag):
     # an auxiliary function that returns list of notes with the tag provided
     #FIXME! there is a bug in the function - for some strange reason 
@@ -119,7 +115,6 @@ def tasker_add(cursor, connection, input_dictionary):
     #     auxiliary_list.append(item[0])
     # return auxiliary_list
 
-
 def tasker_quit(ask=0):
     """
     1>>> tasker_quit(1)
@@ -131,8 +126,6 @@ def tasker_quit(ask=0):
             sys.exit()
     else:
         sys.exit()
-
-
 
 # auxiliary functions
 def tasker_add_check(input_dictionary):
@@ -229,14 +222,12 @@ def return_tags(text):
             return_list.append(tag_cleared_from_hashtags.strip())
     return(return_list)
 
-
 def no_hash_check(input_string):
     check = re.compile('''[#]''')
     if len(check.findall(input_string)) == 0:
         return True
     else:
         return False
-
 
 def convert_input_to_dictionary(input_string):
     # tests are in tests.py
@@ -286,6 +277,7 @@ def drop_tables(cursor, connection):
     cursor.execute('''DROP TABLE notes''')
     cursor.execute('''DROP TABLE tags''')
     connection.commit()
+
 
 # TEST CYCLE
 if __name__ == '__main__':
