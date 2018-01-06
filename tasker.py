@@ -1,6 +1,6 @@
-# Version: 28
+# Version: 29
 # Date: 6.1.18
-# Time: 17:02 GMT+5
+# Time: 20:55 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -14,9 +14,6 @@ command_list = ['add', 'quit']  # list of commands available,
                                 # used in command_check_dictionary()
 
 
-conn = sqlite3.connect('example.db')
-c = conn.cursor()
-c.execute('''pragma foreign_keys = on''')
 
 # CREATING TABLES
 def create_tables(cursor, connection):
@@ -35,7 +32,7 @@ def create_tables(cursor, connection):
             primary key (ID_note, ID_tag))''')
     connection.commit()
 
-create_tables(c, conn)
+
 
 
 # FUNCTIONS
@@ -72,27 +69,28 @@ def chief_function(input_string):
     else:
         command = input_dictionary['command']
         if command == 'add':
-            tasker_add(input_dictionary)
+            tasker_add(c, conn, input_dictionary)
         if command == 'quit':
             tasker_quit(ask=1)
 
 
-def tasker_add(input_dictionary):
+def tasker_add(cursor, connection, input_dictionary):
     # tests are in tests.py
     if tasker_add_check(input_dictionary) is False:
         raise Warning('Shit has happened')
     try:
-        c.execute("""insert into notes VALUES (Null, ?)""", (input_dictionary['command'],))
-        note_id_for_insertion = last_record_id('notes')
+        cursor.execute("""insert into notes VALUES (Null, ?)""", (input_dictionary['command'],))
+        note_id_for_insertion = last_record_id(cursor, connection, 'notes')
         for tag in input_dictionary['tags']:
-            c.execute("""insert into tags VALUES (Null, ?)""", (tag,))
-            tag_id_for_insertion = last_record_id('tags')
+            cursor.execute("""insert into tags VALUES (Null, ?)""", (tag,))
+            tag_id_for_insertion = last_record_id(cursor, connection, 'tags')
             # Currenty here
             # a = c.execute('''SELECT * from tags''')
             # for item in a:
             #     print('tag ', tag, item)
-            c.execute("""insert into notes_tags VALUES (?, ?)""", 
+            cursor.execute("""insert into notes_tags VALUES (?, ?)""", 
                     (note_id_for_insertion, tag_id_for_insertion))
+            connection.commit()
     except Warning:
         return('Error: Shit has happened')
 
@@ -149,12 +147,12 @@ def tasker_add_check(input_dictionary):
         return False
     return True
 
-def tasker_tags():
+def tasker_tags(cursor, connection):
     #TODO write tests, see issue 20
     #TODO rewrite the function to use 1 joined query instead of 2 separated, see issue 28
     #tests are in tests.py
     """
-    #>>> tasker_tags()
+    >>> tasker_tags()
     {}
 
     #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['iskal', 'ronyal', 'is kal']})
@@ -166,18 +164,18 @@ def tasker_tags():
 
     """
     # initializing tag directory as there are subsequnt queries with the same coursor 'c' and thus the whole thing won't work otherwise 
-    list_of_tags = c.execute("""SELECT tag FROM tags""")
+    list_of_tags = cursor.execute("""SELECT tag FROM tags""")
     resulting_dictionary = {}
     for tag in list_of_tags:
         resulting_dictionary[tag[0]] = 0
     for tag in resulting_dictionary:
-        tag_id = return_tag_id(tag)
-        number_of_notes = c.execute("""SELECT COUNT(*) FROM notes_tags WHERE (ID_tag = ?)""", (tag_id))
+        tag_id = return_tag_id(cursor, connection, tag)
+        number_of_notes = cursor.execute("""SELECT COUNT(*) FROM notes_tags WHERE (ID_tag = ?)""", (tag_id))
         for item in number_of_notes:
             resulting_dictionary[tag] = item[0]
     return(resulting_dictionary)
         
-def return_tag_id(tag):
+def return_tag_id(cursor, connection, tag):
     #TODO write tests, see issue 21
     """
     #>>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['iskal', 'ronyal', 'is kal']})
@@ -193,7 +191,7 @@ def return_tag_id(tag):
 
     #>>> clear_all()
     """
-    tag_id = c.execute("""SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag,))
+    tag_id = cursor.execute("""SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag,))
     for item in tag_id:
         return item
 
@@ -245,16 +243,16 @@ def command_check_dictionary(input_dictionary):
         return(False)
     return(True)
 
-def last_record(table):
+def last_record(cursor, connection, table):
     #TODO deal with possible sql-injection in the function, see issue 22
     #TODO write tests, see issue 23
-    resulting_last_record = c.execute("""select * from {table_name} 
+    resulting_last_record = cursor.execute("""select * from {table_name} 
             where ROWID = (SELECT MAX(ROWID) from {table_name})""".format
             (table_name=table))
     return(resulting_last_record)
 
-def last_record_id(table):
-    last_record_cursor = last_record(table)
+def last_record_id(cursor, connection, table):
+    last_record_cursor = last_record(cursor, connection, table)
     for item in last_record_cursor:
         return(item[0])
 
@@ -361,13 +359,18 @@ def drop_tables(cursor, connection):
     connection.commit()
 
 # TEST CYCLE
-if __name__ == '__main__':
-    if testmode == 1:
-        import doctest
-        doctest.testmod()
+# if __name__ == '__main__':
+#     if testmode == 1:
+#         import doctest
+#         doctest.testmod()
 
 
 # MAIN CYCLE
+if __name__ == '__main__':
+    conn = sqlite3.connect('example.db')
+    c = conn.cursor()
+    c.execute('''pragma foreign_keys = on''')
+    create_tables(c, conn)
     quit = 1
     while quit == 1:
         user_command = input('Enter command: ')
