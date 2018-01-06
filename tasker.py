@@ -1,6 +1,6 @@
-# Version: 30
+# Version: 31
 # Date: 6.1.18
-# Time: 22:14 GMT+5
+# Time: 22:21 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -288,10 +288,10 @@ def drop_tables(cursor, connection):
     connection.commit()
 
 # TEST CYCLE
-# if __name__ == '__main__':
-#     if testmode == 1:
-#         import doctest
-#         doctest.testmod()
+if __name__ == '__main__':
+    if testmode == 1:
+        import doctest
+        doctest.testmod()
 
 
 # MAIN CYCLE
