@@ -1,6 +1,6 @@
-# Version: 4
-# Date: 6.1.18
-# Time: 22:14 GMT+5
+# Version: 5
+# Date: 7.1.18
+# Time: 2:41 GMT+5
 
 
 # IMPORTS
@@ -413,6 +413,46 @@ class Test_clear_all(unittest.TestCase):
                 tasker.tasker_tags(test_cursor, test_connection), 
                 {}
                 )
+
+class Test_return_notes(unittest.TestCase):
+    # test for function return_notes() from tasker.py
+
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal', 'is kal']}
+                )
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['iskal', 'is kal']}
+                )
+        self.assertEqual(
+                tasker.return_notes(
+                    test_cursor, 
+                    test_connection, 'ronyal'
+                    ), 
+                [1])
+        self.assertEqual(
+                tasker.return_notes(
+                    test_cursor, 
+                    test_connection, 'iskal'
+                    ), 
+                [1, 2])
+
 
 # MAIN CYCLE
 if __name__ == '__main__':

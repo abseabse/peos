@@ -1,6 +1,6 @@
-# Version: 32
-# Date: 6.1.18
-# Time: 22:26 GMT+5
+# Version: 33
+# Date: 7.1.18
+# Time: 2:40 GMT+5
 
 
 # IMPORTS
@@ -76,44 +76,44 @@ def tasker_add(cursor, connection, input_dictionary):
     if tasker_add_check(input_dictionary) is False:
         raise Warning('Shit has happened')
     try:
-        cursor.execute("""insert into notes VALUES (Null, ?)""", (input_dictionary['command'],))
+        cursor.execute("""insert into notes VALUES (Null, ?)""", 
+                (input_dictionary['note'],))
+        connection.commit()
         note_id_for_insertion = last_record_id(cursor, connection, 'notes')
+        current_tags = tasker_tags(cursor, connection)
         for tag in input_dictionary['tags']:
-            cursor.execute("""insert into tags VALUES (Null, ?)""", (tag,))
-            tag_id_for_insertion = last_record_id(cursor, connection, 'tags')
-            # Currenty here
-            # a = c.execute('''SELECT * from tags''')
-            # for item in a:
-            #     print('tag ', tag, item)
+            if tag in current_tags:
+                # there is [0] in the line below as return_tag_id() returns 
+                # tuple (while integer is needed).
+                tag_id_for_insertion = return_tag_id(
+                        cursor, connection, tag)[0]
+            else:
+                cursor.execute("""insert into tags VALUES (Null, ?)""", 
+                        (tag,)
+                        )
+                tag_id_for_insertion = last_record_id(
+                        cursor, connection, 'tags'
+                        )
             cursor.execute("""insert into notes_tags VALUES (?, ?)""", 
-                    (note_id_for_insertion, tag_id_for_insertion))
+                    (note_id_for_insertion, tag_id_for_insertion)
+                    )
             connection.commit()
     except Warning:
         return('Error: Shit has happened')
 
-# def return_notes(tag):
+def return_notes(cursor, connection, tag):
     # an auxiliary function that returns list of notes with the tag provided
-    #FIXME! there is a bug in the function - for some strange reason 
-    # the function cannot add the second note in the test 2.
-    """
-    # >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
-
-    # >>> tasker_add({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['iskal', 'is kal']})
-
-    # >>> return_notes(['ronyal'])
-    [1]
-
-    # >>> return_notes(['iskal'])
-    [1, 2]
-
-    """
-    # tag_id = return_tag_id(tag)
-    # notes_cursor = c.execute('''SELECT ID_note from notes_tags''')
-    # notes_cursor = c.execute('''SELECT ID_note from notes_tags WHERE (ID_tag = ?)''', (tag_id))
-    # auxiliary_list = []
-    # for item in notes_cursor:
-    #     auxiliary_list.append(item[0])
-    # return auxiliary_list
+    # tests are in tests.py
+    tag_id = return_tag_id(cursor, connection, tag)
+    notes_cursor = cursor.execute(
+            '''SELECT ID_note from notes_tags WHERE (ID_tag = ?)''', 
+            (tag_id)
+            )
+    auxiliary_list = []
+    for item in notes_cursor:
+        auxiliary_list.append(item[0])
+    connection.commit()
+    return auxiliary_list
 
 def tasker_quit(ask=0):
     """
@@ -142,7 +142,8 @@ def tasker_add_check(input_dictionary):
 
 def tasker_tags(cursor, connection):
     # tests are in tests.py
-    # TODO rewrite the function to use 1 joined query instead of 2 separated, see issue #28
+    # TODO rewrite the function to use 1 joined query instead of 2 
+    # separated, see issue #28
     list_of_tags = cursor.execute("""SELECT tag FROM tags""")
     # initializing tag dictionary as there are subsequnt queries with 
     # the same cursor and thus the whole thing won't work otherwise
@@ -282,6 +283,13 @@ def drop_tables(cursor, connection):
 # TEST CYCLE
 if __name__ == '__main__':
     if testmode == 1:
+        # TODO remove doubling of the code 
+        # (the same lines are in the main cycle). See issue #39.
+        conn = sqlite3.connect('example.db')
+        c = conn.cursor()
+        c.execute('''pragma foreign_keys = on''')
+        create_tables(c, conn)
+        quit = 1 
         import doctest
         doctest.testmod()
 
