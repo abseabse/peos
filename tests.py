@@ -1,4 +1,4 @@
-# Version: 1
+# Version: 1*
 # Date: 6.1.18
 # Time: 15:52 GMT+5
 
@@ -17,6 +17,7 @@ c.execute('''pragma foreign_keys = on''')
 
 # TEST BLOCK
 class TestTables(unittest.TestCase):
+# tests for create_tables() in tasker.py
     
     def setUp(self):
         tasker.create_tables(c, conn)
@@ -76,7 +77,124 @@ class TestTables(unittest.TestCase):
             c.execute("""insert into notes_tags VALUES (1, 2)""")
         conn.commit()
 
+class Test_initial_input_check(unittest.TestCase):
+# tests for initial_input_check in tasker.py
 
+    def setUp(self):
+        tasker.create_tables(c, conn)
+
+    def tearDown(self):
+        tasker.drop_tables(c, conn)
+
+    def test_one(self):
+        self.assertTrue(
+                tasker.initial_input_check('tasker gogakal # ronyal, iskal')
+                )
+
+    def test_two(self):
+        self.assertTrue(
+                tasker.initial_input_check('tasker gogakal  ronyal, iskal')
+                )
+
+    def test_three(self):
+        self.assertTrue(
+                tasker.initial_input_check('tasker quit')
+                )
+
+    def test_four(self):
+        self.assertFalse(
+                tasker.initial_input_check('')
+                )
+
+class Test_tasker_add(unittest.TestCase):
+# tests for tasker_add() in tasker.py
+
+    def setUp(self):
+        tasker.create_tables(c, conn)
+
+    def tearDown(self):
+        tasker.drop_tables(c, conn)
+
+    def test_one(self):
+        tasker.tasker_add(
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal', 'is kal']}
+                )
+        self.assertEqual(
+                tasker.tasker_tags(), {'ronyal': 1, 'iskal': 1, 'is kal': 1}
+                )
+
+    def test_two(self):
+        with self.assertRaises(Warning): 
+            tasker.tasker_add(
+                    {'beginning': 'tasker', 
+                     'command': 'add', 
+                     'note': 'gogakal', 
+                     'tags': []}
+                    )
+
+    def test_three(self):
+        with self.assertRaises(Warning): 
+            tasker.tasker_add(
+                    {'beginning': 'tasker', 
+                     'command': 'add', 
+                     'note': '', 
+                     'tags': ['ronyal', 'iskal', 'is kal']}
+                    )
+
+class Test_tasker_add_check(unittest.TestCase):
+    # tests for tasker_add_check() in tasker.py
+    
+    def setUp(self):
+        tasker.create_tables(c, conn)
+
+    def tearDown(self):
+        tasker.drop_tables(c, conn)
+
+    def test_one(self):
+        self.assertTrue(
+                tasker.tasker_add_check(
+                    {'beginning': 'tasker', 
+                     'command': 'add', 
+                     'note': 'gogakal', 
+                     'tags': ['ronyal', 'iskal', 'is kal']})
+                )
+    
+    def test_two(self):
+        self.assertFalse(
+                tasker.tasker_add_check(
+                    {'beginning': 'tasker', 
+                     'command': 'add', 
+                     'note': '', 
+                     'tags': ['ronyal', 'iskal', 'is kal']})
+                )
+    
+    def test_three(self):
+        self.assertFalse(
+                tasker.tasker_add_check(
+                    {'beginning': 'tasker', 
+                     'command': 'add', 
+                     'note': 'gogakal', 
+                     'tags': []})
+                )
+
+class Test_tasker_tags(unittest.TestCase):
+
+    def setUp(self):
+        tasker.create_tables(c, conn)
+
+    def tearDown(self):
+        tasker.drop_tables(c, conn)
+
+    def test_one(self):
+        # FIXME there is a problem, somehow there is some information in 
+        # temporary database for testing, that is not good at all.
+        # The possible reason - each function adresses not the temporary
+        # database but normal database instead. Need to check it.
+        # See issue #34 
+        self.assertEqual(tasker.tasker_tags(), {})
 
 # MAIN CYCLE
 if __name__ == '__main__':

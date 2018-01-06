@@ -1,6 +1,6 @@
-# Version: 27
+# Version: 28
 # Date: 6.1.18
-# Time: 16:44 GMT+5
+# Time: 17:02 GMT+5
 
 # IMPORTS
 import sqlite3
@@ -112,8 +112,6 @@ def tasker_add(input_dictionary):
     # >>> return_notes(['iskal'])
     [1, 2]
 
-    # >>> clear_all()
-
     """
     # tag_id = return_tag_id(tag)
     # notes_cursor = c.execute('''SELECT ID_note from notes_tags''')
@@ -140,19 +138,7 @@ def tasker_quit(ask=0):
 
 # auxiliary functions
 def tasker_add_check(input_dictionary):
-    """
-    #>>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': ['ronyal', 'iskal', 'is kal']})
-    True
-
-    #>>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': '', 'tags': ['ronyal', 'iskal', 'is kal']})
-    False
-
-    #>>> tasker_add_check({'beginning': 'tasker', 'command': 'add', 'note': 'gogakal', 'tags': []})
-    False
-
-    #>>> clear_all()
-
-    """
+    # tests are in tests.py
     # Step 0: checks if input contains necessary keys 'beginning', 'command'
     # are in the previous more general function - command_check_dictionary()
     # Step 1: check if note is entered
@@ -166,6 +152,7 @@ def tasker_add_check(input_dictionary):
 def tasker_tags():
     #TODO write tests, see issue 20
     #TODO rewrite the function to use 1 joined query instead of 2 separated, see issue 28
+    #tests are in tests.py
     """
     #>>> tasker_tags()
     {}
