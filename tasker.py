@@ -1,6 +1,6 @@
-# Version: 33
-# Date: 7.1.18
-# Time: 2:40 GMT+5
+# Version: 34
+# Date: 8.1.18
+# Time: 4:14 GMT+5
 
 
 # IMPORTS
@@ -12,7 +12,7 @@ import re
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then doctest blocks will be executed, 
                 # otherwise not
-command_list = ['add', 'quit']  # list of commands available,
+command_list = ['add', 'quit', 'get']  # list of commands available,
                                 # used in command_check_dictionary()
 
 # FUNCTIONS
@@ -33,42 +33,20 @@ def create_tables(cursor, connection):
             primary key (ID_note, ID_tag))''')
     connection.commit()
 
-# main functions
-def initial_input_check(input_string):
-    # The upper layer function, that checks if the 
-    # input is correct in overall.
-    # tests are in tests.py
-    check1 = re.compile('''
-            (\w+\s*)+           # looking for at least one initial word;
-            [#]                 # looking for a hash symbol;
-            \s+                 # looking for at least one whitespace 
-                                # after hash symbol;
-            \w+                 # looking for at least one word after 
-                                # hash symbol (i.e. tag).
-            ''', re.VERBOSE)
-
-    check2 = re.compile('''
-            (\w+\s*)+           # looking for at least one initial word
-            ''', re.VERBOSE)
-    check1_result = check1.match(input_string)
-    check2_result = check2.match(input_string)
-    if (check1_result is not None) or (check2_result is not None):
-        return True
-    else:
-        return False
-
-    
-def chief_function(input_string):
+# main functions 
+def chief_function(cursor, connection, input_string):
     #TODO think about adding tests, see issue #32
     input_dictionary = convert_input_to_dictionary(input_string)
     if command_check_dictionary(input_dictionary) == False:
         print('Error: Wrong input string. To quit type: tasker quit')
     else:
         command = input_dictionary['command']
-        if command == 'add':
-            tasker_add(c, conn, input_dictionary)
         if command == 'quit':
             tasker_quit(ask=1)
+        if command == 'add':
+            tasker_add(cursor, connection, input_dictionary)
+        if command == 'get':
+            tasker_get(cursor, connection, input_dictionary)
 
 
 def tasker_add(cursor, connection, input_dictionary):
@@ -101,19 +79,22 @@ def tasker_add(cursor, connection, input_dictionary):
     except Warning:
         return('Error: Shit has happened')
 
-def return_notes(cursor, connection, tag):
-    # an auxiliary function that returns list of notes with the tag provided
+def tasker_get(cursor, connection, input_dictionary):
     # tests are in tests.py
-    tag_id = return_tag_id(cursor, connection, tag)
-    notes_cursor = cursor.execute(
-            '''SELECT ID_note from notes_tags WHERE (ID_tag = ?)''', 
-            (tag_id)
+    list_of_notes_ID =  return_tags_intersection(
+            cursor, connection, input_dictionary['tags']
             )
-    auxiliary_list = []
-    for item in notes_cursor:
-        auxiliary_list.append(item[0])
-    connection.commit()
-    return auxiliary_list
+    result = cursor.execute(
+            '''SELECT * FROM notes 
+            WHERE ID_note IN {list_of_notes_ID}'''.format(
+                list_of_notes_ID=tuple(list_of_notes_ID)
+                )
+            )
+    result_dictionary = {}
+    for item in result:
+        print(item[0], "-", item[1])
+        result_dictionary[item[0]] = item[1]
+    return result_dictionary
 
 def tasker_quit(ask=0):
     """
@@ -128,6 +109,43 @@ def tasker_quit(ask=0):
         sys.exit()
 
 # auxiliary functions
+def return_tags_intersection(cursor, connection, tag_list):
+    # an auxiliary function that returns list of notes with 
+    # the tag list provided.
+    # TODO write tests, see issue #42.
+    common_list = []
+    for tag in tag_list:
+        notes_list =  return_notes(cursor, connection, tag)
+        if notes_list == []:
+            return []
+        elif common_list == []:
+            # there might be a problem: changes in notes_list can affect
+            # common_list. TODO that thing should be tested.
+            common_list = notes_list
+        else:
+            common_list = list(set(common_list)&set(notes_list))
+            if common_list == []:
+                return []
+    return common_list
+
+def return_notes(cursor, connection, tag):
+    # an auxiliary function that returns list of notes with the tag provided
+    # tests are in tests.py
+    tag_id = return_tag_id(cursor, connection, tag)
+    # FIXME the problem is here: need to apply a bypass for non-existing tags
+    if tag_id is None:
+        return []
+    else:
+        notes_cursor = cursor.execute(
+                '''SELECT ID_note from notes_tags WHERE (ID_tag = ?)''', 
+                (tag_id)
+                )
+        auxiliary_list = []
+        for item in notes_cursor:
+            auxiliary_list.append(item[0])
+        connection.commit()
+        return auxiliary_list
+
 def tasker_add_check(input_dictionary):
     # tests are in tests.py
     # Step 0: checks if input contains necessary keys 'beginning', 'command'
@@ -262,6 +280,29 @@ def convert_input_to_dictionary(input_string):
         resulting_dictionary['tags'] = return_tags(trailing_string)
     return(resulting_dictionary)
 
+def initial_input_check(input_string):
+    # The upper layer function, that checks if the 
+    # input is correct in overall.
+    # tests are in tests.py
+    check1 = re.compile('''
+            (\w+\s*)+           # looking for at least one initial word;
+            [#]                 # looking for a hash symbol;
+            \s+                 # looking for at least one whitespace 
+                                # after hash symbol;
+            \w+                 # looking for at least one word after 
+                                # hash symbol (i.e. tag).
+            ''', re.VERBOSE)
+
+    check2 = re.compile('''
+            (\w+\s*)+           # looking for at least one initial word
+            ''', re.VERBOSE)
+    check1_result = check1.match(input_string)
+    check2_result = check2.match(input_string)
+    if (check1_result is not None) or (check2_result is not None):
+        return True
+    else:
+        return False
+
 # auxiliary functions for test purpose only (used only in doctests)
 def clear_all(cursor, connection):
     # nuclear-type function that erases all the entered notes and tags
@@ -304,6 +345,6 @@ if __name__ == '__main__':
     while quit == 1:
         user_command = input('Enter command: ')
         if initial_input_check(user_command) == True: 
-            chief_function(user_command)
+            chief_function(c, conn, user_command)
         else:
             print('gogakal')

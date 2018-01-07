@@ -1,6 +1,6 @@
-# Version: 5
-# Date: 7.1.18
-# Time: 2:41 GMT+5
+# Version: 6
+# Date: 8.1.18
+# Time: 4:14 GMT+5
 
 
 # IMPORTS
@@ -17,7 +17,7 @@ test_cursor.execute('''pragma foreign_keys = on''')
 
 # TEST BLOCK
 class TestTables(unittest.TestCase):
-# tests for create_tables() in tasker.py
+    # tests for create_tables() in tasker.py
     
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
@@ -77,8 +77,9 @@ class TestTables(unittest.TestCase):
             test_cursor.execute("""insert into notes_tags VALUES (1, 2)""")
         test_connection.commit()
 
+
 class Test_initial_input_check(unittest.TestCase):
-# tests for initial_input_check in tasker.py
+    # tests for initial_input_check in tasker.py
 
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
@@ -105,6 +106,7 @@ class Test_initial_input_check(unittest.TestCase):
         self.assertFalse(
                 tasker.initial_input_check('')
                 )
+
 
 class Test_tasker_add(unittest.TestCase):
     # tests for tasker_add() in tasker.py
@@ -144,6 +146,7 @@ class Test_tasker_add(unittest.TestCase):
                      'tags': ['ronyal', 'iskal', 'is kal']}
                     )
 
+
 class Test_tasker_add_check(unittest.TestCase):
     # tests for tasker_add_check() in tasker.py
     
@@ -180,6 +183,7 @@ class Test_tasker_add_check(unittest.TestCase):
                      'tags': []})
                 )
 
+
 class Test_tasker_tags(unittest.TestCase):
     # tests for tasker_tags() in tasker.py
 
@@ -207,6 +211,7 @@ class Test_tasker_tags(unittest.TestCase):
                 tasker.tasker_tags(test_cursor, test_connection),
                 {'ronyal': 1, 'iskal': 1, 'is kal': 1}
                 )
+
 
 class Test_return_tag_id(unittest.TestCase):
     # tests for return_tag_id() in tasker.py
@@ -244,6 +249,13 @@ class Test_return_tag_id(unittest.TestCase):
                     ), 
                 (3,)
                 )
+        self.assertEqual(
+                tasker.return_tag_id(
+                    test_cursor, test_connection, 'is kal1'
+                    ), 
+                None
+                )
+
 
 class Test_remove_doubled_tags(unittest.TestCase):
     # tests for remove_doubled_tags() in tasker.py
@@ -259,6 +271,7 @@ class Test_remove_doubled_tags(unittest.TestCase):
 
     def test_two(self):
         self.assertEqual(tasker.remove_doubled_tags(['kal', 'kal']), ['kal'])
+
 
 class Test_command_check_dictionary(unittest.TestCase):
     # tests for command_check_dictionary() in tasker.py
@@ -303,6 +316,7 @@ class Test_command_check_dictionary(unittest.TestCase):
                      'tags': ['ronyal', 'iskal', 'is kal']}
                     )
                 )
+
 
 class Test_return_tags(unittest.TestCase):
     # tests for function return_tags() in tasker.py 
@@ -414,6 +428,7 @@ class Test_clear_all(unittest.TestCase):
                 {}
                 )
 
+
 class Test_return_notes(unittest.TestCase):
     # test for function return_notes() from tasker.py
 
@@ -443,17 +458,100 @@ class Test_return_notes(unittest.TestCase):
         self.assertEqual(
                 tasker.return_notes(
                     test_cursor, 
-                    test_connection, 'ronyal'
+                    test_connection, 
+                    'ronyal'
                     ), 
                 [1])
         self.assertEqual(
                 tasker.return_notes(
                     test_cursor, 
-                    test_connection, 'iskal'
+                    test_connection, 
+                    'iskal'
                     ), 
                 [1, 2])
+        self.assertEqual(
+                tasker.return_notes(
+                    test_cursor, 
+                    test_connection, 
+                    'iskal1'
+                    ), 
+                [])
 
+class Test_tasker_get(unittest.TestCase):
+    # tests for function tasker_get() in tasker.py
 
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal', 'is kal']}
+                )
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak', 
+                 'tags': ['iskal', 'o kale']}
+                )
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'vesma kal', 
+                 'tags': ['ronyal', 'iskal', 'is kal', 'o kale']}
+                )
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'pichal', 
+                 'tags': ['ronyal']}
+                )
+        self.assertEqual(
+                tasker.tasker_get(
+                    test_cursor, 
+                    test_connection, 
+                    {'beginning': 'tasker', 
+                     'command': 'get', 
+                     'note': '', 
+                     'tags': ['ronyal', 'is kal']}
+                    ), 
+                {1: 'gogakal', 3: 'vesma kal'}
+                )
+        self.assertEqual(
+                tasker.tasker_get(
+                    test_cursor, 
+                    test_connection, 
+                    {'beginning': 'tasker', 
+                     'command': 'get', 
+                     'note': '', 
+                     'tags': []}
+                    ), 
+                {}
+                )
+        self.assertEqual(
+                tasker.tasker_get(
+                    test_cursor, 
+                    test_connection, 
+                    {'beginning': 'tasker', 
+                     'command': 'get', 
+                     'note': '', 
+                     'tags': ['o kal']}
+                    ), 
+                {}
+                )
 # MAIN CYCLE
 if __name__ == '__main__':
     unittest.main()
