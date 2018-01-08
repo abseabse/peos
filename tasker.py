@@ -1,6 +1,6 @@
-# Version: 34
+# Version: 35
 # Date: 8.1.18
-# Time: 4:14 GMT+5
+# Time: 12:56 GMT+5
 
 
 # IMPORTS
@@ -12,8 +12,9 @@ import re
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then doctest blocks will be executed, 
                 # otherwise not
-command_list = ['add', 'quit', 'get']  # list of commands available,
-                                # used in command_check_dictionary()
+command_list = ['add', 'quit', 'get', 'tags']
+    # list of commands available, used in command_check_dictionary()
+
 
 # FUNCTIONS
 # table functions
@@ -47,6 +48,8 @@ def chief_function(cursor, connection, input_string):
             tasker_add(cursor, connection, input_dictionary)
         if command == 'get':
             tasker_get(cursor, connection, input_dictionary)
+        if command == 'tags':
+            tasker_tags(cursor, connection, input_dictionary)
 
 
 def tasker_add(cursor, connection, input_dictionary):
@@ -58,7 +61,7 @@ def tasker_add(cursor, connection, input_dictionary):
                 (input_dictionary['note'],))
         connection.commit()
         note_id_for_insertion = last_record_id(cursor, connection, 'notes')
-        current_tags = tasker_tags(cursor, connection)
+        current_tags = return_tag_dictionary(cursor, connection)
         for tag in input_dictionary['tags']:
             if tag in current_tags:
                 # there is [0] in the line below as return_tag_id() returns 
@@ -81,6 +84,7 @@ def tasker_add(cursor, connection, input_dictionary):
 
 def tasker_get(cursor, connection, input_dictionary):
     # tests are in tests.py
+    # TODO remove mess in the function's end, see issue #44
     list_of_notes_ID =  return_tags_intersection(
             cursor, connection, input_dictionary['tags']
             )
@@ -108,6 +112,14 @@ def tasker_quit(ask=0):
     else:
         sys.exit()
 
+def tasker_tags(cursor, connection, input_dictionary):
+    # tests are in tests.py
+    # TODO remove mess in the function's end, see issue #44
+    list_of_tags = return_tag_dictionary(cursor, connection)
+    for key, value in list_of_tags.items():
+        print(key+": ", value) 
+    return list_of_tags
+
 # auxiliary functions
 def return_tags_intersection(cursor, connection, tag_list):
     # an auxiliary function that returns list of notes with 
@@ -132,7 +144,6 @@ def return_notes(cursor, connection, tag):
     # an auxiliary function that returns list of notes with the tag provided
     # tests are in tests.py
     tag_id = return_tag_id(cursor, connection, tag)
-    # FIXME the problem is here: need to apply a bypass for non-existing tags
     if tag_id is None:
         return []
     else:
@@ -158,7 +169,7 @@ def tasker_add_check(input_dictionary):
         return False
     return True
 
-def tasker_tags(cursor, connection):
+def return_tag_dictionary(cursor, connection):
     # tests are in tests.py
     # TODO rewrite the function to use 1 joined query instead of 2 
     # separated, see issue #28

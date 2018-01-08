@@ -1,6 +1,6 @@
-# Version: 6
+# Version: 7
 # Date: 8.1.18
-# Time: 4:14 GMT+5
+# Time: 12:56 GMT+5
 
 
 # IMPORTS
@@ -125,7 +125,7 @@ class Test_tasker_add(unittest.TestCase):
                  'tags': ['ronyal', 'iskal', 'is kal', 'o kale']}
                 )
         self.assertEqual(
-                tasker.tasker_tags(test_cursor, test_connection), {'ronyal': 1, 'iskal': 1, 'is kal': 1, 'o kale': 1}
+                tasker.return_tag_dictionary(test_cursor, test_connection), {'ronyal': 1, 'iskal': 1, 'is kal': 1, 'o kale': 1}
                 )
 
     def test_two(self):
@@ -184,8 +184,8 @@ class Test_tasker_add_check(unittest.TestCase):
                 )
 
 
-class Test_tasker_tags(unittest.TestCase):
-    # tests for tasker_tags() in tasker.py
+class Test_return_tag_dictionary(unittest.TestCase):
+    # tests for return_tag_dictionary() in tasker.py
 
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
@@ -195,7 +195,7 @@ class Test_tasker_tags(unittest.TestCase):
 
     def test_one(self):
         self.assertEqual(
-                tasker.tasker_tags(test_cursor, test_connection), {}
+                tasker.return_tag_dictionary(test_cursor, test_connection), {}
                 )
 
     def test_two(self):
@@ -208,7 +208,7 @@ class Test_tasker_tags(unittest.TestCase):
                  'tags': ['iskal', 'ronyal', 'is kal']}
                 )
         self.assertEqual(
-                tasker.tasker_tags(test_cursor, test_connection),
+                tasker.return_tag_dictionary(test_cursor, test_connection),
                 {'ronyal': 1, 'iskal': 1, 'is kal': 1}
                 )
 
@@ -419,12 +419,12 @@ class Test_clear_all(unittest.TestCase):
                  }
                 )
         self.assertEqual(
-                tasker.tasker_tags(test_cursor, test_connection), 
+                tasker.return_tag_dictionary(test_cursor, test_connection), 
                 {'ronyal': 1}
                 )
         tasker.clear_all(test_cursor, test_connection)
         self.assertEqual(
-                tasker.tasker_tags(test_cursor, test_connection), 
+                tasker.return_tag_dictionary(test_cursor, test_connection), 
                 {}
                 )
 
@@ -552,6 +552,47 @@ class Test_tasker_get(unittest.TestCase):
                     ), 
                 {}
                 )
+
+
+class Test_tasker_tags(unittest.TestCase):
+    # tests for function tasker_tags() in tasker.py
+
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal', 'is kal']}
+                )
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak', 
+                 'tags': ['iskal', 'o kale']}
+                )
+        self.assertEqual(
+                tasker.tasker_tags(
+                    test_cursor, 
+                    test_connection,
+                    {'beginning': 'tasker',
+                     'command': 'get',
+                     'note': '', 
+                     'tags': []}, 
+                    ),
+                {'ronyal': 1, 'iskal': 2, 'is kal': 1, 'o kale': 1}
+                )
+
+
 # MAIN CYCLE
 if __name__ == '__main__':
     unittest.main()
