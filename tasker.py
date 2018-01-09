@@ -1,6 +1,6 @@
-# Version: 35
-# Date: 8.1.18
-# Time: 12:56 GMT+5
+# Version: 36
+# Date: 9.1.18
+# Time: 23:11 GMT+5
 
 
 # IMPORTS
@@ -99,6 +99,12 @@ def tasker_get(cursor, connection, input_dictionary):
         print(item[0], "-", item[1])
         result_dictionary[item[0]] = item[1]
     return result_dictionary
+
+def tasker_rm(cursor, connection, input_dictionary):
+    # function, that removes a note or a bunch of notes.
+    # tests are in tests.py
+    # TODO write the function, see issue #45.
+    pass
 
 def tasker_quit(ask=0):
     """
@@ -261,6 +267,11 @@ def no_hash_check(input_string):
 
 def convert_input_to_dictionary(input_string):
     # tests are in tests.py
+    '''
+    #>>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal')
+
+    #>>> convert_input_to_dictionary('tasker rm 1, 2, 3 # ronyal, iskal')
+    '''
     resulting_dictionary = {}
     if no_hash_check(input_string) == True:
         leading_string = input_string.strip().split(' ', 1)
@@ -280,16 +291,55 @@ def convert_input_to_dictionary(input_string):
     resulting_dictionary['command'] = ''
     resulting_dictionary['note'] = ''
     resulting_dictionary['tags'] = []
+    resulting_dictionary['IDs'] = []
     if len(additional_list) > 1:
         resulting_dictionary['command'] = additional_list[1]
-        resulting_dictionary['note'] = ''
-        resulting_dictionary['tags'] = []
     if len(additional_list) > 2:
-        resulting_dictionary['note'] = additional_list[2]
-        resulting_dictionary['tags'] = []
+        if check_if_note_contains_only_IDs(additional_list[2]) == False:
+            resulting_dictionary['note'] = additional_list[2]          
+        else:
+            resulting_dictionary['IDs'] = return_IDs(additional_list[2])
     if no_hash_check(input_string) == False:
         resulting_dictionary['tags'] = return_tags(trailing_string)
     return(resulting_dictionary)
+
+def return_IDs(input_string):
+    # an auxiliary function that returns a list of ID's (notes or tags).
+    # the function is vulnerable for inputs like '1d', each item 
+    # after splitting the input_string should be convertable to integer
+    # otherwise it will be skipped.
+    # tests are in tests.py
+    clean_list = []
+    messy_list = input_string.split(',')
+    check1 = re.compile('''\s*[\d+]\s*''')
+    check2 = re.compile('''^\d+$''')
+    for item in messy_list:
+        check1_result = check1.match(item)
+        if check1_result is not None:
+            messy_item = item.strip()
+            check2_result = check2.match(messy_item)
+            if check2_result is not None:
+                clean_item = int(messy_item)
+                clean_list.append(clean_item)
+    return clean_list
+
+def check_if_note_contains_only_IDs(input_string):
+    # an auxiliary function that checks if the input string contains 
+    # notes only
+    # tests are in tests.py
+    initial_list = input_string.split(",")
+    initial_list_is_correct = False
+    for item in initial_list:
+        check1 = re.compile('''\s*[\d+]\s*''')
+        check2 = re.compile('''\s*[\d+]\s+\S+''')
+        check1_result = check1.match(item)
+        check2_result = check2.match(item)
+        if (check1_result is not None) and (check2_result is None):
+            initial_list_is_correct = True
+    if initial_list_is_correct:
+        return True
+    else:
+        return False        
 
 def initial_input_check(input_string):
     # The upper layer function, that checks if the 
@@ -314,7 +364,8 @@ def initial_input_check(input_string):
     else:
         return False
 
-# auxiliary functions for test purpose only (used only in doctests)
+# auxiliary functions for test purpose only (used only in doctests and
+# unittests)
 def clear_all(cursor, connection):
     # nuclear-type function that erases all the entered notes and tags
     # tests are in tests.py

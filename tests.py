@@ -1,6 +1,6 @@
-# Version: 7
-# Date: 8.1.18
-# Time: 12:56 GMT+5
+# Version: 8
+# Date: 9.1.18
+# Time: 23:11 GMT+5
 
 
 # IMPORTS
@@ -362,17 +362,19 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': 'add', 
                  'note': 'gogakal', 
-                 'tags': ['ronyal', 'iskal', 'is kal']
+                 'tags': ['ronyal', 'iskal', 'is kal'],
+                 'IDs': []
                  }
                 )
-
+    
     def test_two(self):
         self.assertEqual(
                 tasker.convert_input_to_dictionary('tasker'),
                 {'beginning': 'tasker', 
                  'command': '', 
                  'note': '', 
-                 'tags': []
+                 'tags': [],
+                 'IDs': []
                  }
                 )
 
@@ -383,7 +385,8 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': 'gogakal', 
                  'note': 'ronyal iskal', 
-                 'tags': []
+                 'tags': [],
+                 'IDs': []
                  }
                 )
 
@@ -394,7 +397,8 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': 'add', 
                  'note': 'gogakal', 
-                 'tags': ['ronyal', 'iskal', 'is kal']
+                 'tags': ['ronyal', 'iskal', 'is kal'],
+                 'IDs': []
                  }
                 )
 
@@ -593,6 +597,129 @@ class Test_tasker_tags(unittest.TestCase):
                 )
 
 
+class Test_tasker_remove(unittest.TestCase):
+    # tests for function tasker_rm() in tasker.py
+    # TODO write the tests after the function will be 
+    # completed, see issue #45.
+    
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+    
+    @unittest.expectedFailure
+    def test_one(self):
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal', 'is kal']}
+                )
+        tasker.tasker_add(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak', 
+                 'tags': ['iskal', 'o kale']}
+                )
+        tasker.tasker_rm(
+                test_cursor, 
+                test_connection, 
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak', 
+                 'tags': ['iskal', 'o kale']}
+                )
+        self.assertEqual(
+                tasker.tasker_rm(
+                    test_cursor, 
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'rm', 
+                     'note': '', 
+                     'tags': []}
+                    ),
+                )
+
+
+class Test_return_IDs(unittest.TestCase):
+    # tests for function return_IDs() in tasker.py
+    
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        self.assertEqual(
+                tasker.return_IDs('1, 2 , ,,,  3   ,  ,,4'),
+                [1, 2, 3, 4]
+                )
+
+    def test_two(self):
+        self.assertEqual(
+                tasker.return_IDs('1a, 2 , ,,,  3   ,  ,,4'),
+                [2, 3, 4]
+                )
+
+    def test_three(self):
+        self.assertEqual(
+                tasker.return_IDs('1 1, 2 , ,,,  3   ,  ,,4'),
+                [2, 3, 4]
+                )
+
+    def test_four(self):
+        self.assertEqual(
+                tasker.return_IDs(''),
+                []
+                )
+
+    def test_five(self):
+        self.assertEqual(
+                tasker.return_IDs(' 1.1 , 2'),
+                [2]
+                )
+
+
+class Test_check_if_note_contains_only_IDs(unittest.TestCase):
+    # tests for function check_if_note_contains_only_IDs() in tasker.py
+
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        self.assertEqual(
+                tasker.check_if_note_contains_only_IDs('1'),
+                True
+                )
+
+    def test_two(self):
+        self.assertEqual(
+                tasker.check_if_note_contains_only_IDs(''),
+                False
+                )
+
+    def test_three(self):
+        self.assertEqual(
+                tasker.check_if_note_contains_only_IDs('1, 2 ,, 3'),
+                True
+                )
+
+    def test_four(self):
+        self.assertEqual(
+                tasker.check_if_note_contains_only_IDs('1 December'),
+                False
+                )
+        
+        
 # MAIN CYCLE
 if __name__ == '__main__':
     unittest.main()
