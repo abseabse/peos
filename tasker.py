@@ -1,6 +1,6 @@
-# Version: 40
+# Version: 41
 # Date: 13.1.18
-# Time: 3:53 GMT+5
+# Time: 4:02 GMT+5
 
 
 # IMPORTS
@@ -210,10 +210,6 @@ def return_tag_id(cursor, connection, tag):
             )
     for item in tag_id:
         return item
-
-def remove_doubled_tags(list_of_tags):
-    # tests are in tests.py
-    return list(set(list_of_tags))
 
 def command_check_dictionary(input_dictionary):
     # tests are in tests.py

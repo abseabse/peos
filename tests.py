@@ -1,6 +1,6 @@
-# Version: 11
+# Version: 12
 # Date: 13.1.18
-# Time: 3:53 GMT+5
+# Time: 4:02 GMT+5
 
 
 # IMPORTS
@@ -256,22 +256,6 @@ class Test_return_tag_id(unittest.TestCase):
                     ), 
                 None
                 )
-
-
-class Test_remove_doubled_tags(unittest.TestCase):
-    # tests for remove_doubled_tags() in tasker.py
-
-    def setUp(self):
-        tasker.create_tables(test_cursor, test_connection)
-
-    def tearDown(self):
-        tasker.drop_tables(test_cursor, test_connection)
-
-    def test_one(self):
-        self.assertEqual(tasker.remove_doubled_tags(['kal']), ['kal'])
-
-    def test_two(self):
-        self.assertEqual(tasker.remove_doubled_tags(['kal', 'kal']), ['kal'])
 
 
 class Test_command_check_dictionary(unittest.TestCase):
