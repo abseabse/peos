@@ -1,6 +1,6 @@
-# Version: 38
+# Version: 39
 # Date: 13.1.18
-# Time: 2:24 GMT+5
+# Time: 2:40 GMT+5
 
 
 # IMPORTS
@@ -89,16 +89,19 @@ def tasker_get(cursor, connection, input_dictionary):
     list_of_notes_ID =  return_tags_intersection(
             cursor, connection, input_dictionary['tags']
             )
-    # TODO four lines under this comment is somewhat messy. 
-    # Perhaps, need to rewrite, see issue #47
-    a = ""
-    for item in list_of_notes_ID:
-        a = a + str(item) + ", "
-    a = a[:-2]
-    result = cursor.execute(
-            '''SELECT * FROM notes WHERE ID_note IN 
-            ({list_to_apply})'''.format(list_to_apply=a)
-            )
+    if (input_dictionary['tags'] == []) and (list_of_notes_ID == []):
+        result = cursor.execute('''SELECT * FROM notes''')
+    else:
+        # TODO four lines under this comment is somewhat messy. 
+        # Perhaps, need to rewrite, see issue #47
+        a = ""
+        for item in list_of_notes_ID:
+            a = a + str(item) + ", "
+        a = a[:-2]
+        result = cursor.execute(
+                '''SELECT * FROM notes WHERE ID_note IN 
+                ({list_to_apply})'''.format(list_to_apply=a)
+                )
     # TODO remove mess in the function's end, see issue #44
     result_dictionary = {}
     for item in result:

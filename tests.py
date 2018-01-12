@@ -1,6 +1,6 @@
-# Version: 9
+# Version: 10
 # Date: 13.1.18
-# Time: 2:24 GMT+5
+# Time: 2:40 GMT+5
 
 
 # IMPORTS
@@ -532,7 +532,7 @@ class Test_tasker_get(unittest.TestCase):
                      'note': '', 
                      'tags': []}
                     ), 
-                {}
+                {1: 'gogakal', 2: 'kak je tak', 3: 'vesma kal', 4: 'pichal'}
                 )
         self.assertEqual(
                 tasker.tasker_get(
