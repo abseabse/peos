@@ -1,6 +1,6 @@
-# Version: 39
+# Version: 40
 # Date: 13.1.18
-# Time: 2:40 GMT+5
+# Time: 3:53 GMT+5
 
 
 # IMPORTS
@@ -195,24 +195,14 @@ def tasker_add_check(input_dictionary):
 
 def return_tag_dictionary(cursor, connection):
     # tests are in tests.py
-    # TODO rewrite the function to use 1 joined query instead of 2 
-    # separated, see issue #28
-    list_of_tags = cursor.execute("""SELECT tag FROM tags""")
-    # initializing tag dictionary as there are subsequnt queries with 
-    # the same cursor and thus the whole thing won't work otherwise
+    list_of_tags = cursor.execute("""SELECT tag, count(*) 
+            FROM notes_tags LEFT JOIN tags ON tags.ID_tag=notes_tags.ID_tag 
+            GROUP BY notes_tags.ID_tag""")
     resulting_dictionary = {}
-    for tag in list_of_tags:
-        resulting_dictionary[tag[0]] = 0
-    for tag in resulting_dictionary:
-        tag_id = return_tag_id(cursor, connection, tag)
-        number_of_notes = cursor.execute(
-                """SELECT COUNT(*) FROM notes_tags WHERE (ID_tag = ?)""", 
-                (tag_id)
-                )
-        for item in number_of_notes:
-            resulting_dictionary[tag] = item[0]
+    for item, value in list_of_tags:
+        resulting_dictionary[item] = value
     return(resulting_dictionary)
-        
+
 def return_tag_id(cursor, connection, tag):
     # tests are in tests.py
     tag_id = cursor.execute(

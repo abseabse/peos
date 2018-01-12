@@ -1,6 +1,6 @@
-# Version: 10
+# Version: 11
 # Date: 13.1.18
-# Time: 2:40 GMT+5
+# Time: 3:53 GMT+5
 
 
 # IMPORTS
@@ -195,7 +195,8 @@ class Test_return_tag_dictionary(unittest.TestCase):
 
     def test_one(self):
         self.assertEqual(
-                tasker.return_tag_dictionary(test_cursor, test_connection), {}
+                tasker.return_tag_dictionary(test_cursor, test_connection), 
+                {}
                 )
 
     def test_two(self):
