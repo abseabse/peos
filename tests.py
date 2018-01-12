@@ -1,6 +1,6 @@
-# Version: 8
-# Date: 9.1.18
-# Time: 23:11 GMT+5
+# Version: 9
+# Date: 13.1.18
+# Time: 2:24 GMT+5
 
 
 # IMPORTS
@@ -530,9 +530,9 @@ class Test_tasker_get(unittest.TestCase):
                     {'beginning': 'tasker', 
                      'command': 'get', 
                      'note': '', 
-                     'tags': ['ronyal', 'is kal']}
+                     'tags': []}
                     ), 
-                {1: 'gogakal', 3: 'vesma kal'}
+                {}
                 )
         self.assertEqual(
                 tasker.tasker_get(
@@ -541,9 +541,9 @@ class Test_tasker_get(unittest.TestCase):
                     {'beginning': 'tasker', 
                      'command': 'get', 
                      'note': '', 
-                     'tags': []}
+                     'tags': ['ronyal', 'is kal']}
                     ), 
-                {}
+                {1: 'gogakal', 3: 'vesma kal'}
                 )
         self.assertEqual(
                 tasker.tasker_get(
@@ -597,7 +597,7 @@ class Test_tasker_tags(unittest.TestCase):
                 )
 
 
-class Test_tasker_remove(unittest.TestCase):
+class Test_tasker_rm(unittest.TestCase):
     # tests for function tasker_rm() in tasker.py
     # TODO write the tests after the function will be 
     # completed, see issue #45.
@@ -607,8 +607,7 @@ class Test_tasker_remove(unittest.TestCase):
 
     def tearDown(self):
         tasker.drop_tables(test_cursor, test_connection)
-    
-    @unittest.expectedFailure
+   
     def test_one(self):
         tasker.tasker_add(
                 test_cursor, 
@@ -616,7 +615,8 @@ class Test_tasker_remove(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': 'add', 
                  'note': 'gogakal', 
-                 'tags': ['ronyal', 'iskal', 'is kal']}
+                 'tags': ['ronyal', 'iskal', 'is kal'],
+                 'IDs':[]}
                 )
         tasker.tasker_add(
                 test_cursor, 
@@ -624,25 +624,28 @@ class Test_tasker_remove(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': 'add', 
                  'note': 'kak je tak', 
-                 'tags': ['iskal', 'o kale']}
+                 'tags': ['iskal', 'o kale', 'is kal'],
+                 'IDs':[]}
                 )
         tasker.tasker_rm(
                 test_cursor, 
                 test_connection, 
                 {'beginning': 'tasker', 
-                 'command': 'add', 
-                 'note': 'kak je tak', 
-                 'tags': ['iskal', 'o kale']}
+                 'command': 'tasker_rm', 
+                 'note': '', 
+                 'tags': [],
+                 'IDs':[1]}
                 )
         self.assertEqual(
-                tasker.tasker_rm(
+                tasker.tasker_get(
                     test_cursor, 
-                    test_connection,
+                    test_connection, 
                     {'beginning': 'tasker', 
-                     'command': 'rm', 
+                     'command': 'get', 
                      'note': '', 
-                     'tags': []}
-                    ),
+                     'tags': ['iskal']}
+                    ), 
+                {2: 'kak je tak'}
                 )
 
 
@@ -718,7 +721,73 @@ class Test_check_if_note_contains_only_IDs(unittest.TestCase):
                 tasker.check_if_note_contains_only_IDs('1 December'),
                 False
                 )
-        
+
+
+class Test_return_tag_intersection(unittest.TestCase):
+    # tests for function return_tags_intersection() in tasker.py
+
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal']}
+                )
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'vesma', 
+                 'tags': ['ronyal', 'iskal', 'is kal']}
+                )
+        self.assertEqual(
+                tasker.return_tags_intersection(
+                    test_cursor,
+                    test_connection,
+                    ['ronyal']),
+                [1, 2]
+                )
+        self.assertEqual(
+                tasker.return_tags_intersection(
+                    test_cursor,
+                    test_connection,
+                    ['is kal']),
+                [2]
+                )
+        self.assertEqual(
+                tasker.return_tags_intersection(
+                    test_cursor,
+                    test_connection,
+                    []),
+                []
+                )
+        self.assertEqual(
+                tasker.return_tags_intersection(
+                    test_cursor,
+                    test_connection,
+                    ['a vot i da']),
+                []
+                )
+        self.assertEqual(
+                tasker.return_tags_intersection(
+                    test_cursor,
+                    test_connection,
+                    ['ronyal', 'iskal']),
+                [1, 2]
+                )
+        self.assertEqual(
+                tasker.return_tags_intersection(
+                    test_cursor,
+                    test_connection,
+                    ['ronyal', 'iskal', 'vse ploha']),
+                []
+                )
+     
         
 # MAIN CYCLE
 if __name__ == '__main__':

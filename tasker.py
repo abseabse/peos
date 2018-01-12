@@ -1,6 +1,6 @@
-# Version: 36
-# Date: 9.1.18
-# Time: 23:11 GMT+5
+# Version: 37
+# Date: 13.1.18
+# Time: 2:24 GMT+5
 
 
 # IMPORTS
@@ -83,17 +83,22 @@ def tasker_add(cursor, connection, input_dictionary):
         return('Error: Shit has happened')
 
 def tasker_get(cursor, connection, input_dictionary):
+    # function that returns list of notes with tags from input
     # tests are in tests.py
-    # TODO remove mess in the function's end, see issue #44
     list_of_notes_ID =  return_tags_intersection(
             cursor, connection, input_dictionary['tags']
             )
+    # TODO four lines under this comment is somewhat messy. 
+    # Perhaps, need to rewrite, see issue #47
+    a = ""
+    for item in list_of_notes_ID:
+        a = a + str(item) + ", "
+    a = a[:-2]
     result = cursor.execute(
-            '''SELECT * FROM notes 
-            WHERE ID_note IN {list_of_notes_ID}'''.format(
-                list_of_notes_ID=tuple(list_of_notes_ID)
-                )
+            '''SELECT * FROM notes WHERE ID_note IN 
+            ({list_to_apply})'''.format(list_to_apply=a)
             )
+    # TODO remove mess in the function's end, see issue #44
     result_dictionary = {}
     for item in result:
         print(item[0], "-", item[1])
@@ -103,8 +108,17 @@ def tasker_get(cursor, connection, input_dictionary):
 def tasker_rm(cursor, connection, input_dictionary):
     # function, that removes a note or a bunch of notes.
     # tests are in tests.py
-    # TODO write the function, see issue #45.
-    pass
+    for item in input_dictionary['IDs']:
+        # print(str(item)) # debugging
+        cursor.execute(
+                '''DELETE FROM notes_tags WHERE (ID_note = ?)''', 
+                str(item)  
+                )
+        cursor.execute(
+                '''DELETE FROM notes WHERE (ID_note = ?)''', 
+                str(item)  
+                )
+        connection.commit()
 
 def tasker_quit(ask=0):
     """
@@ -128,9 +142,9 @@ def tasker_tags(cursor, connection, input_dictionary):
 
 # auxiliary functions
 def return_tags_intersection(cursor, connection, tag_list):
-    # an auxiliary function that returns list of notes with 
-    # the tag list provided.
-    # TODO write tests, see issue #42.
+    # an auxiliary function that returns list of notes 
+    # (in form of notes IDs) with the tag list provided.
+    # tests are in tests.py
     common_list = []
     for tag in tag_list:
         notes_list =  return_notes(cursor, connection, tag)
