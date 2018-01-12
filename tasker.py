@@ -1,4 +1,4 @@
-# Version: 37
+# Version: 38
 # Date: 13.1.18
 # Time: 2:24 GMT+5
 
@@ -12,7 +12,7 @@ import re
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then doctest blocks will be executed, 
                 # otherwise not
-command_list = ['add', 'quit', 'get', 'tags']
+command_list = ['add', 'quit', 'get', 'tags', 'rm']
     # list of commands available, used in command_check_dictionary()
 
 
@@ -50,7 +50,8 @@ def chief_function(cursor, connection, input_string):
             tasker_get(cursor, connection, input_dictionary)
         if command == 'tags':
             tasker_tags(cursor, connection, input_dictionary)
-
+        if command == 'rm':
+            tasker_rm(cursor, connection, input_dictionary)
 
 def tasker_add(cursor, connection, input_dictionary):
     # tests are in tests.py
