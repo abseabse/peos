@@ -1,6 +1,6 @@
-# Version: 13
+# Version: 14
 # Date: 13.1.18
-# Time: 14:11 GMT+5
+# Time: 16:05 GMT+5
 
 
 # IMPORTS
@@ -132,13 +132,20 @@ class Test_tasker_add(unittest.TestCase):
                 )
 
     def test_two(self):
-        with self.assertRaises(Warning): 
-            tasker.tasker_add(test_cursor, test_connection,
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': []}
+                )
+        self.assertEqual(
+                tasker.tasker_get(test_cursor, test_connection,
                     {'beginning': 'tasker', 
                      'command': 'add', 
-                     'note': 'gogakal', 
-                     'tags': []}
-                    )
+                     'note': '', 
+                     'tags': []}),
+                {1: 'gogakal'}
+                )
 
     def test_three(self):
         with self.assertRaises(Warning): 
@@ -178,11 +185,20 @@ class Test_tasker_add_check(unittest.TestCase):
                 )
     
     def test_three(self):
-        self.assertFalse(
+        self.assertTrue(
                 tasker.tasker_add_check(
                     {'beginning': 'tasker', 
                      'command': 'add', 
                      'note': 'gogakal', 
+                     'tags': []})
+                )
+
+    def test_four(self):
+        self.assertFalse(
+                tasker.tasker_add_check(
+                    {'beginning': 'tasker', 
+                     'command': 'add', 
+                     'note': '', 
                      'tags': []})
                 )
 

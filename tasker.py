@@ -1,6 +1,6 @@
-# Version: 42
+# Version: 43
 # Date: 13.1.18
-# Time: 15:10 GMT+5
+# Time: 16:05 GMT+5
 
 
 # IMPORTS
@@ -40,6 +40,7 @@ def create_tables(cursor, connection):
 def chief_function(cursor, connection, input_string):
     # service function that parses user input 
     # and launches as appropriate command.
+    # Used directly in main cycle.
     #TODO think about adding tests, see issue #32
     input_dictionary = convert_input_to_dictionary(input_string)
     if command_check_dictionary(input_dictionary) == False:
@@ -68,23 +69,24 @@ def tasker_add(cursor, connection, input_dictionary):
         connection.commit()
         note_id_for_insertion = last_record_id(cursor, connection, 'notes')
         current_tags = return_tag_dictionary(cursor, connection)
-        for tag in input_dictionary['tags']:
-            if tag in current_tags:
-                # there is [0] in the line below as return_tag_id() returns 
-                # tuple (while integer is needed).
-                tag_id_for_insertion = return_tag_id(
-                        cursor, connection, tag)[0]
-            else:
-                cursor.execute("""insert into tags VALUES (Null, ?)""", 
-                        (tag,)
+        if input_dictionary['tags'] != []:
+            for tag in input_dictionary['tags']:
+                if tag in current_tags:
+                    # there is [0] in the line below as return_tag_id() returns 
+                    # tuple (while integer is needed).
+                    tag_id_for_insertion = return_tag_id(
+                            cursor, connection, tag)[0]
+                else:
+                    cursor.execute("""insert into tags VALUES (Null, ?)""", 
+                            (tag,)
+                            )
+                    tag_id_for_insertion = last_record_id(
+                            cursor, connection, 'tags'
+                            )
+                cursor.execute("""insert into notes_tags VALUES (?, ?)""", 
+                        (note_id_for_insertion, tag_id_for_insertion)
                         )
-                tag_id_for_insertion = last_record_id(
-                        cursor, connection, 'tags'
-                        )
-            cursor.execute("""insert into notes_tags VALUES (?, ?)""", 
-                    (note_id_for_insertion, tag_id_for_insertion)
-                    )
-            connection.commit()
+                connection.commit()
     except Warning:
         return('Error: Shit has happened')
 
@@ -188,7 +190,8 @@ def return_notes(cursor, connection, tag):
         return auxiliary_list
 
 def tasker_add_check(input_dictionary):
-    # an auxiliary function that perform input check for tasker_add()
+    # an auxiliary function that perform input check for tasker_add().
+    # Used in tasker_add().
     # tests are in tests.py
     # Step 0: checks if input contains necessary keys 'beginning', 'command'
     # are in the previous more general function - command_check_dictionary()
@@ -196,8 +199,8 @@ def tasker_add_check(input_dictionary):
     if input_dictionary['note'] == '':
         return False
     # Step 2: check if at least one tag is entered
-    if input_dictionary['tags'] == []:
-        return False
+    # if input_dictionary['tags'] == []:
+    #    return False
     return True
 
 def return_tag_dictionary(cursor, connection):
