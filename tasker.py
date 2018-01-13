@@ -1,6 +1,6 @@
-# Version: 41
+# Version: 42
 # Date: 13.1.18
-# Time: 4:02 GMT+5
+# Time: 15:10 GMT+5
 
 
 # IMPORTS
@@ -19,6 +19,8 @@ command_list = ['add', 'quit', 'get', 'tags', 'rm']
 # FUNCTIONS
 # table functions
 def create_tables(cursor, connection):
+    # sevice function that creates tables in database 
+    # or skips if the tables already exist.
     # tests are in tests.py
     cursor.execute('''CREATE TABLE IF NOT EXISTS notes (
             ID_note integer primary key, 
@@ -36,6 +38,8 @@ def create_tables(cursor, connection):
 
 # main functions 
 def chief_function(cursor, connection, input_string):
+    # service function that parses user input 
+    # and launches as appropriate command.
     #TODO think about adding tests, see issue #32
     input_dictionary = convert_input_to_dictionary(input_string)
     if command_check_dictionary(input_dictionary) == False:
@@ -43,7 +47,7 @@ def chief_function(cursor, connection, input_string):
     else:
         command = input_dictionary['command']
         if command == 'quit':
-            tasker_quit(ask=1)
+            tasker_quit(input_dictionary)
         if command == 'add':
             tasker_add(cursor, connection, input_dictionary)
         if command == 'get':
@@ -54,6 +58,7 @@ def chief_function(cursor, connection, input_string):
             tasker_rm(cursor, connection, input_dictionary)
 
 def tasker_add(cursor, connection, input_dictionary):
+    # function that adds new note.
     # tests are in tests.py
     if tasker_add_check(input_dictionary) is False:
         raise Warning('Shit has happened')
@@ -84,7 +89,7 @@ def tasker_add(cursor, connection, input_dictionary):
         return('Error: Shit has happened')
 
 def tasker_get(cursor, connection, input_dictionary):
-    # function that returns list of notes with tags from input
+    # function that returns list of notes with tags from input.
     # tests are in tests.py
     list_of_notes_ID =  return_tags_intersection(
             cursor, connection, input_dictionary['tags']
@@ -124,19 +129,20 @@ def tasker_rm(cursor, connection, input_dictionary):
                 )
         connection.commit()
 
-def tasker_quit(ask=0):
-    """
-    1>>> tasker_quit(1)
-    1Are you sure to quit? [y] [n] \n
-    """
-    if ask == 1:
+def tasker_quit(input_dictionary):
+    # function to quit.
+    ask = input_dictionary['note']
+    if ask == 'y':
+        sys.exit()
+    else:
         user_command = input('Are you sure to quit? [y] [n] \n')
         if user_command == 'y':
             sys.exit()
-    else:
-        sys.exit()
+
 
 def tasker_tags(cursor, connection, input_dictionary):
+    # function that returns a list of all the tags 
+    # with notes quanitity accordingly.
     # tests are in tests.py
     # TODO remove mess in the function's end, see issue #44
     list_of_tags = return_tag_dictionary(cursor, connection)
@@ -182,6 +188,7 @@ def return_notes(cursor, connection, tag):
         return auxiliary_list
 
 def tasker_add_check(input_dictionary):
+    # an auxiliary function that perform input check for tasker_add()
     # tests are in tests.py
     # Step 0: checks if input contains necessary keys 'beginning', 'command'
     # are in the previous more general function - command_check_dictionary()
@@ -194,6 +201,7 @@ def tasker_add_check(input_dictionary):
     return True
 
 def return_tag_dictionary(cursor, connection):
+    # an auxiliary function that returns dictionary of tags.
     # tests are in tests.py
     list_of_tags = cursor.execute("""SELECT tag, count(*) 
             FROM notes_tags LEFT JOIN tags ON tags.ID_tag=notes_tags.ID_tag 
@@ -204,6 +212,7 @@ def return_tag_dictionary(cursor, connection):
     return(resulting_dictionary)
 
 def return_tag_id(cursor, connection, tag):
+    # an auxiliary function that returns tag ID for tag specified.
     # tests are in tests.py
     tag_id = cursor.execute(
             """SELECT ID_tag FROM tags WHERE (tag = ?)""", (tag,)
@@ -212,6 +221,7 @@ def return_tag_id(cursor, connection, tag):
         return item
 
 def command_check_dictionary(input_dictionary):
+    # an auxiliary function that performs initial check for chief_function().
     # tests are in tests.py
     # The first step: check if the type of the input is a dictionary
     if type(input_dictionary) != type({}):
@@ -238,6 +248,8 @@ def command_check_dictionary(input_dictionary):
     return(True)
 
 def last_record(cursor, connection, table):
+    # an auxiliary function that returns the last record from table 
+    # specified. Used indirectly in tasker_add().
     #TODO deal with possible sql-injection in the function, see issue 22
     #TODO write tests, see issue 23
     resulting_last_record = cursor.execute("""select * from {table_name} 
@@ -246,11 +258,15 @@ def last_record(cursor, connection, table):
     return(resulting_last_record)
 
 def last_record_id(cursor, connection, table):
+    # an auxiliary function that returns the last record from table 
+    # specified. Used directly in tasker_add().
     last_record_cursor = last_record(cursor, connection, table)
     for item in last_record_cursor:
         return(item[0])
 
 def return_tags(text):
+    # an auxiliary function, that returns list of tags from string. 
+    # Used directly in convert_input_to_dictionary().
     # tests are in tests.py
     initial_list = text.split(',')
     return_list = []
@@ -263,6 +279,8 @@ def return_tags(text):
     return(return_list)
 
 def no_hash_check(input_string):
+    # an auxiliary function, that determines if there is at least one 
+    # hash sybol in input string. Used in convert_input_to_dictionary().
     check = re.compile('''[#]''')
     if len(check.findall(input_string)) == 0:
         return True
@@ -270,12 +288,9 @@ def no_hash_check(input_string):
         return False
 
 def convert_input_to_dictionary(input_string):
+    # an auxiliary function, that converts user input to dictionary. 
+    # Used directly in chief_function().
     # tests are in tests.py
-    '''
-    #>>> convert_input_to_dictionary('tasker add gogakal # ronyal, iskal')
-
-    #>>> convert_input_to_dictionary('tasker rm 1, 2, 3 # ronyal, iskal')
-    '''
     resulting_dictionary = {}
     if no_hash_check(input_string) == True:
         leading_string = input_string.strip().split(' ', 1)
@@ -312,6 +327,7 @@ def return_IDs(input_string):
     # the function is vulnerable for inputs like '1d', each item 
     # after splitting the input_string should be convertable to integer
     # otherwise it will be skipped.
+    # Used directly in convert_input_to_dictionary().
     # tests are in tests.py
     clean_list = []
     messy_list = input_string.split(',')
@@ -329,7 +345,8 @@ def return_IDs(input_string):
 
 def check_if_note_contains_only_IDs(input_string):
     # an auxiliary function that checks if the input string contains 
-    # notes only
+    # notes only.
+    # Used directly in convert_input_to_dictionary().
     # tests are in tests.py
     initial_list = input_string.split(",")
     initial_list_is_correct = False
@@ -346,8 +363,9 @@ def check_if_note_contains_only_IDs(input_string):
         return False        
 
 def initial_input_check(input_string):
-    # The upper layer function, that checks if the 
-    # input is correct in overall.
+    # The upper layer function, that checks if the input 
+    # is correct in overall.
+    # Used directly in the main cycle.
     # tests are in tests.py
     check1 = re.compile('''
             (\w+\s*)+           # looking for at least one initial word;
