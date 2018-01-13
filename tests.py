@@ -1,6 +1,6 @@
-# Version: 14
-# Date: 13.1.18
-# Time: 16:05 GMT+5
+# Version: 15
+# Date: 14.1.18
+# Time: 3:16 GMT+5
 
 
 # IMPORTS
@@ -367,7 +367,8 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                     'tasker add gogakal # ronyal, iskal , is kal'),
                 {'beginning': 'tasker', 
                  'command': 'add', 
-                 'note': 'gogakal', 
+                 'note': 'gogakal',
+                 'extra note': '',
                  'tags': ['ronyal', 'iskal', 'is kal'],
                  'IDs': []
                  }
@@ -379,6 +380,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': '', 
                  'note': '', 
+                 'extra note': '',
                  'tags': [],
                  'IDs': []
                  }
@@ -391,6 +393,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': 'gogakal', 
                  'note': 'ronyal iskal', 
+                 'extra note': '',
                  'tags': [],
                  'IDs': []
                  }
@@ -403,11 +406,76 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': 'add', 
                  'note': 'gogakal', 
+                 'extra note': '',
                  'tags': ['ronyal', 'iskal', 'is kal'],
                  'IDs': []
                  }
                 )
 
+    def test_five(self):
+        self.assertEqual(
+                tasker.convert_input_to_dictionary(
+                    'tasker ch 1 ch gogakal # ronyal, iskal'),
+                {'beginning': 'tasker', 
+                 'command': 'ch', 
+                 'note': '', 
+                 'extra note': 'gogakal',
+                 'tags': ['ronyal', 'iskal'],
+                 'IDs': [1]
+                 }
+                )
+
+    def test_six(self):
+        self.assertEqual(
+                tasker.convert_input_to_dictionary(
+                    'tasker ch 1 2 ch gogakal # ronyal, iskal'),
+                {'beginning': 'tasker', 
+                 'command': 'ch', 
+                 'note': '1 2 ch gogakal', 
+                 'extra note': '',
+                 'tags': ['ronyal', 'iskal'],
+                 'IDs': []
+                 }
+                )
+
+    def test_seven(self):
+        self.assertEqual(
+                tasker.convert_input_to_dictionary(
+                    'tasker ch 1'),
+                {'beginning': 'tasker', 
+                 'command': 'ch', 
+                 'note': '', 
+                 'extra note': '',
+                 'tags': [],
+                 'IDs': [1]
+                 }
+                )
+
+    def test_eight(self):
+        self.assertEqual(
+                tasker.convert_input_to_dictionary(
+                    'tasker ch 1.1 ch gogakal # ronyal, iskal'),
+                {'beginning': 'tasker', 
+                 'command': 'ch', 
+                 'note': '1.1 ch gogakal', 
+                 'extra note': '',
+                 'tags': ['ronyal', 'iskal'],
+                 'IDs': []
+                 }
+                )
+
+    def test_nine(self):
+        self.assertEqual(
+                tasker.convert_input_to_dictionary(
+                    'tasker ch 1, 2, 3 ch gogakal is kal # ronyal, iskal'),
+                {'beginning': 'tasker', 
+                 'command': 'ch', 
+                 'note': '1, 2, 3 ch gogakal is kal', 
+                 'extra note': '',
+                 'tags': ['ronyal', 'iskal'],
+                 'IDs': []
+                 }
+                )
 
 class Test_clear_all(unittest.TestCase):
     # tests for function clear_all() in tasker.py
@@ -709,27 +777,40 @@ class Test_check_if_note_contains_only_IDs(unittest.TestCase):
         tasker.drop_tables(test_cursor, test_connection)
 
     def test_one(self):
-        self.assertEqual(
-                tasker.check_if_note_contains_only_IDs('1'),
-                True
+        self.assertTrue(
+                tasker.check_if_note_contains_only_IDs('1')
                 )
 
     def test_two(self):
-        self.assertEqual(
-                tasker.check_if_note_contains_only_IDs(''),
-                False
+        self.assertFalse(
+                tasker.check_if_note_contains_only_IDs('')
                 )
 
     def test_three(self):
-        self.assertEqual(
-                tasker.check_if_note_contains_only_IDs('1, 2 ,, 3'),
-                True
+        self.assertTrue(
+                tasker.check_if_note_contains_only_IDs('1, 2 ,, 3')
                 )
 
     def test_four(self):
-        self.assertEqual(
-                tasker.check_if_note_contains_only_IDs('1 December'),
-                False
+        self.assertFalse(
+                tasker.check_if_note_contains_only_IDs('1 December')
+                )
+
+    def test_five(self):
+        self.assertFalse(
+                tasker.check_if_note_contains_only_IDs(
+                    '1, 2, 3 ch gogakal is kal')
+                )
+
+    def test_six(self):
+        self.assertFalse(
+                tasker.check_if_note_contains_only_IDs(
+                   ', , ,,   ,,,')
+                )
+
+    def test_seven(self):
+        self.assertFalse(
+                tasker.check_if_note_contains_only_IDs('1.1')
                 )
 
 
@@ -805,7 +886,55 @@ class Test_return_tag_intersection(unittest.TestCase):
                     ['ronyal', 'iskal', 'vse ploha']),
                 []
                 )
-     
+
+
+class Test_initial_check_tasker_ch(unittest.TestCase):
+    # test for function initial_check_tasker_ch() in tasker.py
+
+    def test_one(self):
+        self.assertTrue(
+                tasker.initial_check_tasker_ch(
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga ch kal'}
+                    )
+                )
+
+    def test_two(self):
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga ch '}
+                    )
+                )
+
+    def test_three(self):
+        self.assertTrue(
+                tasker.initial_check_tasker_ch(
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga ch ch kal'}
+                    )
+                )
+
+    def test_four(self):
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': ''}
+                    )
+                )
+
+    def test_five(self):
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': ' '}
+                    )
+                )
         
 # MAIN CYCLE
 if __name__ == '__main__':

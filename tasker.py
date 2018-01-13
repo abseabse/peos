@@ -1,6 +1,6 @@
-# Version: 43
-# Date: 13.1.18
-# Time: 16:05 GMT+5
+# Version: 44
+# Date: 14.1.18
+# Time: 3:16 GMT+5
 
 
 # IMPORTS
@@ -152,7 +152,36 @@ def tasker_tags(cursor, connection, input_dictionary):
         print(key+": ", value) 
     return list_of_tags
 
-# auxiliary functions
+
+def tasker_ch(cursor, connection, input_dictionary):
+    # TODO currently here
+    # function that changes the note and its tags if specified
+    if initial_check_tasker_ch(input_dictionary) == False:
+        pass
+    else:
+        pass
+        # note_divided = input_dictionary['note'] = 
+
+# AUXILIARY FUNCTIONS
+def transform_input_dictionary_tasker_ch(input_dictionary):
+    # auxiliary function that transform input note to a normal structure
+    # Used in tasker_ch().
+    # TODO currently here
+    output_dictionary = {}
+    output_dictionary['beginning'] = input_dictionary['beginning']
+    output_dictionary['command_one'] = input_dictionary['command']
+    output_dictionary['IDs'] = input_dictionary['IDs']
+
+
+def initial_check_tasker_ch(input_dictionary):
+    # auxiliary function for tasker_ch() that checks if all the 
+    # necessary parameters are entered
+    note_to_check = input_dictionary['note'].strip().split('ch', 1)
+    if (len(note_to_check) < 2) or ('' in note_to_check):
+        return False
+    else:
+        return True
+
 def return_tags_intersection(cursor, connection, tag_list):
     # an auxiliary function that returns list of notes 
     # (in form of notes IDs) with the tag list provided.
@@ -312,13 +341,27 @@ def convert_input_to_dictionary(input_string):
     resulting_dictionary['beginning'] = additional_list[0]
     resulting_dictionary['command'] = ''
     resulting_dictionary['note'] = ''
+    resulting_dictionary['extra note'] = ''
     resulting_dictionary['tags'] = []
     resulting_dictionary['IDs'] = []
     if len(additional_list) > 1:
         resulting_dictionary['command'] = additional_list[1]
     if len(additional_list) > 2:
         if check_if_note_contains_only_IDs(additional_list[2]) == False:
-            resulting_dictionary['note'] = additional_list[2]          
+            # transform input_dictionary if case of command 'ch' (changing
+            # note)
+            splitted_note = additional_list[2].split(' ', 2)
+            check1 = re.compile('''\d+''')
+            check2 = re.compile('''\D+''')
+            result_check1 = check1.search(splitted_note[0])
+            result_check2 = check2.search(splitted_note[0])
+            if (result_check1 is not None) and (result_check2 is None) and (splitted_note[1] == 'ch'):
+                resulting_dictionary['IDs'] = return_IDs(
+                        splitted_note[0].strip()
+                        )
+                resulting_dictionary['extra note'] = splitted_note[2]
+            else:
+                resulting_dictionary['note'] = additional_list[2]          
         else:
             resulting_dictionary['IDs'] = return_IDs(additional_list[2])
     if no_hash_check(input_string) == False:
@@ -351,19 +394,33 @@ def check_if_note_contains_only_IDs(input_string):
     # notes only.
     # Used directly in convert_input_to_dictionary().
     # tests are in tests.py
-    initial_list = input_string.split(",")
-    initial_list_is_correct = False
+    # Step 0: check if input string is empty
+    check_string = input_string.strip()
+    if check_string == '':
+        return False 
+    # Step 1: item examination if input string contains something
+    initial_list = input_string.split(",") 
+    at_least_one_incorrect_item = False
+    at_least_one_integer = False
+    check1 = re.compile('''\d+''')
+    check2 = re.compile('''\D+''')
     for item in initial_list:
-        check1 = re.compile('''\s*[\d+]\s*''')
-        check2 = re.compile('''\s*[\d+]\s+\S+''')
-        check1_result = check1.match(item)
-        check2_result = check2.match(item)
-        if (check1_result is not None) and (check2_result is None):
-            initial_list_is_correct = True
-    if initial_list_is_correct:
+        clean_item = item.strip()
+        if clean_item == '':
+            pass
+        else:
+            check1_result = check1.search(clean_item)
+            check2_result = check2.search(clean_item)
+            if (check1_result is not None) and (check2_result is None):
+                at_least_one_integer = True
+            else:
+                at_least_one_incorrect_item = True
+    if at_least_one_incorrect_item:
+        return False
+    elif at_least_one_integer:
         return True
     else:
-        return False        
+        return False
 
 def initial_input_check(input_string):
     # The upper layer function, that checks if the input 
