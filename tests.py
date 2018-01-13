@@ -1,6 +1,6 @@
-# Version: 12
+# Version: 13
 # Date: 13.1.18
-# Time: 4:02 GMT+5
+# Time: 14:11 GMT+5
 
 
 # IMPORTS
@@ -60,7 +60,9 @@ class TestTables(unittest.TestCase):
     # tests if in table notes_tags both attributes goes with
     # not null constraint
         with self.assertRaises(sqlite3.IntegrityError):
-            test_cursor.execute("""insert into notes_tags VALUES (null, null)""")
+            test_cursor.execute(
+                    """insert into notes_tags VALUES (null, null)"""
+                    )
         test_connection.commit()
 
     def test_table_notes_tags_foreign_keys(self):
@@ -125,7 +127,8 @@ class Test_tasker_add(unittest.TestCase):
                  'tags': ['ronyal', 'iskal', 'is kal', 'o kale']}
                 )
         self.assertEqual(
-                tasker.return_tag_dictionary(test_cursor, test_connection), {'ronyal': 1, 'iskal': 1, 'is kal': 1, 'o kale': 1}
+                tasker.return_tag_dictionary(test_cursor, test_connection), 
+                {'ronyal': 1, 'iskal': 1, 'is kal': 1, 'o kale': 1}
                 )
 
     def test_two(self):
@@ -219,11 +222,6 @@ class Test_return_tag_id(unittest.TestCase):
 
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
-
-    def tearDown(self):
-        tasker.drop_tables(test_cursor, test_connection)
-
-    def test_one(self):
         tasker.tasker_add(
                 test_cursor, 
                 test_connection, 
@@ -232,6 +230,11 @@ class Test_return_tag_id(unittest.TestCase):
                  'note': 'gogakal', 
                  'tags': ['iskal', 'ronyal', 'is kal']}
                 )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
         self.assertEqual(
                 tasker.return_tag_id(
                     test_cursor, test_connection, 'iskal'
@@ -250,6 +253,8 @@ class Test_return_tag_id(unittest.TestCase):
                     ), 
                 (3,)
                 )
+
+    def test_two(self):
         self.assertEqual(
                 tasker.return_tag_id(
                     test_cursor, test_connection, 'is kal1'
@@ -393,11 +398,6 @@ class Test_clear_all(unittest.TestCase):
 
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
-
-    def tearDown(self):
-        tasker.drop_tables(test_cursor, test_connection)
-
-    def test_one(self):
         tasker.tasker_add(
                 test_cursor, 
                 test_connection, 
@@ -407,6 +407,11 @@ class Test_clear_all(unittest.TestCase):
                  'tags': ['ronyal']
                  }
                 )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
         self.assertEqual(
                 tasker.return_tag_dictionary(test_cursor, test_connection), 
                 {'ronyal': 1}
@@ -423,11 +428,6 @@ class Test_return_notes(unittest.TestCase):
 
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
-
-    def tearDown(self):
-        tasker.drop_tables(test_cursor, test_connection)
-
-    def test_one(self):
         tasker.tasker_add(
                 test_cursor, 
                 test_connection, 
@@ -444,6 +444,11 @@ class Test_return_notes(unittest.TestCase):
                  'note': 'gogakal', 
                  'tags': ['iskal', 'is kal']}
                 )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
         self.assertEqual(
                 tasker.return_notes(
                     test_cursor, 
@@ -458,6 +463,8 @@ class Test_return_notes(unittest.TestCase):
                     'iskal'
                     ), 
                 [1, 2])
+    
+    def test_two(self):
         self.assertEqual(
                 tasker.return_notes(
                     test_cursor, 
@@ -471,11 +478,6 @@ class Test_tasker_get(unittest.TestCase):
 
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
-
-    def tearDown(self):
-        tasker.drop_tables(test_cursor, test_connection)
-
-    def test_one(self):
         tasker.tasker_add(
                 test_cursor, 
                 test_connection, 
@@ -508,6 +510,11 @@ class Test_tasker_get(unittest.TestCase):
                  'note': 'pichal', 
                  'tags': ['ronyal']}
                 )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
         self.assertEqual(
                 tasker.tasker_get(
                     test_cursor, 
@@ -519,6 +526,8 @@ class Test_tasker_get(unittest.TestCase):
                     ), 
                 {1: 'gogakal', 2: 'kak je tak', 3: 'vesma kal', 4: 'pichal'}
                 )
+    
+    def test_two(self):
         self.assertEqual(
                 tasker.tasker_get(
                     test_cursor, 
@@ -530,6 +539,8 @@ class Test_tasker_get(unittest.TestCase):
                     ), 
                 {1: 'gogakal', 3: 'vesma kal'}
                 )
+        
+    def test_three(self):
         self.assertEqual(
                 tasker.tasker_get(
                     test_cursor, 
@@ -548,11 +559,6 @@ class Test_tasker_tags(unittest.TestCase):
 
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
-
-    def tearDown(self):
-        tasker.drop_tables(test_cursor, test_connection)
-
-    def test_one(self):
         tasker.tasker_add(
                 test_cursor, 
                 test_connection, 
@@ -569,6 +575,11 @@ class Test_tasker_tags(unittest.TestCase):
                  'note': 'kak je tak', 
                  'tags': ['iskal', 'o kale']}
                 )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
         self.assertEqual(
                 tasker.tasker_tags(
                     test_cursor, 
@@ -584,16 +595,9 @@ class Test_tasker_tags(unittest.TestCase):
 
 class Test_tasker_rm(unittest.TestCase):
     # tests for function tasker_rm() in tasker.py
-    # TODO write the tests after the function will be 
-    # completed, see issue #45.
     
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
-
-    def tearDown(self):
-        tasker.drop_tables(test_cursor, test_connection)
-   
-    def test_one(self):
         tasker.tasker_add(
                 test_cursor, 
                 test_connection, 
@@ -612,6 +616,11 @@ class Test_tasker_rm(unittest.TestCase):
                  'tags': ['iskal', 'o kale', 'is kal'],
                  'IDs':[]}
                 )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+   
+    def test_one(self):
         tasker.tasker_rm(
                 test_cursor, 
                 test_connection, 
@@ -713,11 +722,6 @@ class Test_return_tag_intersection(unittest.TestCase):
 
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
-
-    def tearDown(self):
-        tasker.drop_tables(test_cursor, test_connection)
-
-    def test_one(self):
         tasker.tasker_add(test_cursor, test_connection,
                 {'beginning': 'tasker', 
                  'command': 'add', 
@@ -730,6 +734,11 @@ class Test_return_tag_intersection(unittest.TestCase):
                  'note': 'vesma', 
                  'tags': ['ronyal', 'iskal', 'is kal']}
                 )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
         self.assertEqual(
                 tasker.return_tags_intersection(
                     test_cursor,
@@ -744,6 +753,8 @@ class Test_return_tag_intersection(unittest.TestCase):
                     ['is kal']),
                 [2]
                 )
+        
+    def test_two(self):
         self.assertEqual(
                 tasker.return_tags_intersection(
                     test_cursor,
@@ -751,6 +762,8 @@ class Test_return_tag_intersection(unittest.TestCase):
                     []),
                 []
                 )
+    
+    def test_three(self):
         self.assertEqual(
                 tasker.return_tags_intersection(
                     test_cursor,
@@ -758,6 +771,8 @@ class Test_return_tag_intersection(unittest.TestCase):
                     ['a vot i da']),
                 []
                 )
+
+    def test_four(self):
         self.assertEqual(
                 tasker.return_tags_intersection(
                     test_cursor,
@@ -765,6 +780,8 @@ class Test_return_tag_intersection(unittest.TestCase):
                     ['ronyal', 'iskal']),
                 [1, 2]
                 )
+
+    def test_five(self):
         self.assertEqual(
                 tasker.return_tags_intersection(
                     test_cursor,
