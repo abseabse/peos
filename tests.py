@@ -1,6 +1,6 @@
-# Version: 15
-# Date: 14.1.18
-# Time: 3:16 GMT+5
+# Version: 16
+# Date: 15.1.18
+# Time: 2:23 GMT+5
 
 
 # IMPORTS
@@ -369,6 +369,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                  'command': 'add', 
                  'note': 'gogakal',
                  'extra note': '',
+                 'hashtag': 1,
                  'tags': ['ronyal', 'iskal', 'is kal'],
                  'IDs': []
                  }
@@ -381,6 +382,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                  'command': '', 
                  'note': '', 
                  'extra note': '',
+                 'hashtag': 0,
                  'tags': [],
                  'IDs': []
                  }
@@ -394,6 +396,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                  'command': 'gogakal', 
                  'note': 'ronyal iskal', 
                  'extra note': '',
+                 'hashtag': 0,
                  'tags': [],
                  'IDs': []
                  }
@@ -407,6 +410,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                  'command': 'add', 
                  'note': 'gogakal', 
                  'extra note': '',
+                 'hashtag': 1,
                  'tags': ['ronyal', 'iskal', 'is kal'],
                  'IDs': []
                  }
@@ -420,6 +424,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                  'command': 'ch', 
                  'note': '', 
                  'extra note': 'gogakal',
+                 'hashtag': 1,
                  'tags': ['ronyal', 'iskal'],
                  'IDs': [1]
                  }
@@ -433,6 +438,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                  'command': 'ch', 
                  'note': '1 2 ch gogakal', 
                  'extra note': '',
+                 'hashtag': 1,
                  'tags': ['ronyal', 'iskal'],
                  'IDs': []
                  }
@@ -446,6 +452,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                  'command': 'ch', 
                  'note': '', 
                  'extra note': '',
+                 'hashtag': 0,
                  'tags': [],
                  'IDs': [1]
                  }
@@ -459,6 +466,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                  'command': 'ch', 
                  'note': '1.1 ch gogakal', 
                  'extra note': '',
+                 'hashtag': 1,
                  'tags': ['ronyal', 'iskal'],
                  'IDs': []
                  }
@@ -472,8 +480,23 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                  'command': 'ch', 
                  'note': '1, 2, 3 ch gogakal is kal', 
                  'extra note': '',
+                 'hashtag': 1,
                  'tags': ['ronyal', 'iskal'],
                  'IDs': []
+                 }
+                )
+
+    def test_ten(self):
+        self.assertEqual(
+                tasker.convert_input_to_dictionary(
+                    'tasker ch 1 ch gogakal is kal #'),
+                {'beginning': 'tasker', 
+                 'command': 'ch', 
+                 'note': '', 
+                 'extra note': 'gogakal is kal',
+                 'hashtag': 1,
+                 'tags': [],
+                 'IDs': [1]
                  }
                 )
 
@@ -891,51 +914,197 @@ class Test_return_tag_intersection(unittest.TestCase):
 class Test_initial_check_tasker_ch(unittest.TestCase):
     # test for function initial_check_tasker_ch() in tasker.py
 
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal']}
+                )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
     def test_one(self):
-        self.assertTrue(
+        self.assertFalse(
                 tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
                     {'beginning': 'tasker', 
                      'command': 'ch', 
-                     'note': 'goga ch kal'}
+                     'note': 'goga',
+                     'extra note': 'kal',
+                     'IDs': [1]}
                     )
                 )
 
     def test_two(self):
         self.assertFalse(
                 tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
                     {'beginning': 'tasker', 
                      'command': 'ch', 
-                     'note': 'goga ch '}
+                     'note': 'goga',
+                     'extra note': ''}
                     )
                 )
 
     def test_three(self):
         self.assertTrue(
                 tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
                     {'beginning': 'tasker', 
                      'command': 'ch', 
-                     'note': 'goga ch ch kal'}
+                     'note': '',
+                     'hashtag': 1,
+                     'extra note': 'kal',
+                     'IDs': [1]}
                     )
                 )
 
     def test_four(self):
         self.assertFalse(
                 tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
                     {'beginning': 'tasker', 
                      'command': 'ch', 
-                     'note': ''}
+                     'note': '',
+                     'hashtag': 1,
+                     'extra note': 'kal',
+                     'IDs': [35]}
                     )
                 )
 
-    def test_five(self):
-        self.assertFalse(
-                tasker.initial_check_tasker_ch(
-                    {'beginning': 'tasker', 
-                     'command': 'ch', 
-                     'note': ' '}
-                    )
+class Test_tasker_ch(unittest.TestCase):
+    # tests for function tasker_ch() in tasker.py
+
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal',
+                 'hashtag': 1,
+                 'tags': ['ronyal', 'iskal'],
+                 'IDs': []}
                 )
-        
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak',
+                 'hashtag': 1,
+                 'tags': ['iskal'],
+                 'IDs': []}
+                )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        self.assertEqual(
+                tasker.tasker_get(
+                    test_cursor, 
+                    test_connection, 
+                    {'beginning': 'tasker', 
+                     'command': 'get', 
+                     'note': '', 
+                     'tags': []}
+                    ), 
+                {1: 'gogakal', 2: 'kak je tak'}
+                )        
+        tasker.tasker_ch(
+                test_cursor, 
+                test_connection,
+                {'beginning': 'tasker',
+                 'command': 'ch',
+                 'note': '',
+                 'extra note': 'kal',
+                 'hashtag': 1,
+                 'tags': ['ronyal', 'iskal'],
+                 'IDs': [1]}
+                )
+        self.assertEqual(
+                tasker.tasker_get(
+                    test_cursor, 
+                    test_connection, 
+                    {'beginning': 'tasker', 
+                     'command': 'get', 
+                     'note': '', 
+                     'tags': []}
+                    ), 
+                {1: 'kal', 2: 'kak je tak'}
+                )
+        self.assertEqual(
+                tasker.tasker_get(
+                    test_cursor, 
+                    test_connection, 
+                    {'beginning': 'tasker', 
+                     'command': 'get', 
+                     'note': '', 
+                     'tags': []}
+                    ), 
+                {1: 'kal', 2: 'kak je tak'}
+                )
+
+    def test_two(self):
+        with self.assertRaises(Warning):
+            tasker.tasker_ch(
+                    test_cursor, 
+                    test_connection,
+                    {'beginning': 'tasker',
+                    'command': 'ch',
+                    'note': '',
+                    'extra note': 'kal',
+                    'hashtag': 1,
+                    'tags': ['ronyal', 'iskal'],
+                    'IDs': [35]}
+                    )
+
+class Test_add_tags_to_note(unittest.TestCase):
+    # tests for function add_tags_to_note() in tasker.py
+    
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal']}
+                )
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak', 
+                 'tags': ['o kale']}
+                )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)        
+
+    def test_one(self):
+        tasker.add_tags_to_note(
+                test_cursor, 
+                test_connection,
+                1,
+                ['ronyal', 'o kale', 'bol']
+                )
+        self.assertEqual(
+                tasker.tasker_tags(
+                    test_cursor, 
+                    test_connection,
+                    {'beginning': 'tasker',
+                     'command': 'get',
+                     'note': '', 
+                     'tags': []}, 
+                    ),
+                {'ronyal': 1, 'iskal': 1, 'o kale': 2, 'bol': 1}
+                )
+
+
 # MAIN CYCLE
 if __name__ == '__main__':
     unittest.main()

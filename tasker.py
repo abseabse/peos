@@ -1,6 +1,6 @@
-# Version: 44
-# Date: 14.1.18
-# Time: 3:16 GMT+5
+# Version: 45
+# Date: 15.1.18
+# Time: 2:23 GMT+5
 
 
 # IMPORTS
@@ -12,7 +12,7 @@ import re
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then doctest blocks will be executed, 
                 # otherwise not
-command_list = ['add', 'quit', 'get', 'tags', 'rm']
+command_list = ['add', 'quit', 'get', 'tags', 'rm', 'ch']
     # list of commands available, used in command_check_dictionary()
 
 
@@ -57,6 +57,8 @@ def chief_function(cursor, connection, input_string):
             tasker_tags(cursor, connection, input_dictionary)
         if command == 'rm':
             tasker_rm(cursor, connection, input_dictionary)
+        if command == 'ch':
+            tasker_ch(cursor, connection, input_dictionary)
 
 def tasker_add(cursor, connection, input_dictionary):
     # function that adds new note.
@@ -68,25 +70,13 @@ def tasker_add(cursor, connection, input_dictionary):
                 (input_dictionary['note'],))
         connection.commit()
         note_id_for_insertion = last_record_id(cursor, connection, 'notes')
-        current_tags = return_tag_dictionary(cursor, connection)
-        if input_dictionary['tags'] != []:
-            for tag in input_dictionary['tags']:
-                if tag in current_tags:
-                    # there is [0] in the line below as return_tag_id() returns 
-                    # tuple (while integer is needed).
-                    tag_id_for_insertion = return_tag_id(
-                            cursor, connection, tag)[0]
-                else:
-                    cursor.execute("""insert into tags VALUES (Null, ?)""", 
-                            (tag,)
-                            )
-                    tag_id_for_insertion = last_record_id(
-                            cursor, connection, 'tags'
-                            )
-                cursor.execute("""insert into notes_tags VALUES (?, ?)""", 
-                        (note_id_for_insertion, tag_id_for_insertion)
-                        )
-                connection.commit()
+        tags_for_insertion = input_dictionary['tags']
+        add_tags_to_note(
+                cursor, 
+                connection, 
+                note_id_for_insertion,
+                tags_for_insertion
+                )
     except Warning:
         return('Error: Shit has happened')
 
@@ -120,7 +110,6 @@ def tasker_rm(cursor, connection, input_dictionary):
     # function, that removes a note or a bunch of notes.
     # tests are in tests.py
     for item in input_dictionary['IDs']:
-        # print(str(item)) # debugging
         cursor.execute(
                 '''DELETE FROM notes_tags WHERE (ID_note = ?)''', 
                 str(item)  
@@ -152,35 +141,146 @@ def tasker_tags(cursor, connection, input_dictionary):
         print(key+": ", value) 
     return list_of_tags
 
-
 def tasker_ch(cursor, connection, input_dictionary):
-    # TODO currently here
     # function that changes the note and its tags if specified
-    if initial_check_tasker_ch(input_dictionary) == False:
-        pass
+    # tests are in tests.py
+    # TODO move the part of the function to add_tags_to_note(),
+    # see issue #58
+    if initial_check_tasker_ch(
+            cursor, connection, input_dictionary
+            ) == False:
+        raise Warning('Initial check for tasker ch failed')
     else:
-        pass
-        # note_divided = input_dictionary['note'] = 
+        # Step 0: Change the text of the note
+        tuple_to_substitute = (
+                input_dictionary['extra note'], 
+                str(input_dictionary['IDs'][0])
+                )
+        cursor.execute(
+                '''UPDATE notes set note = (?) WHERE ID_note = (?)''', 
+                (tuple_to_substitute))
+        connection.commit()
+        # Step 1: Change the tags of the note
+        if input_dictionary['hashtag'] == 1:
+            note_id = input_dictionary['IDs']
+            # Step 1.1: Delete all the tags if they are not provided at all
+            if input_dictionary['tags'] == []:
+                cursor.execute('''DELETE FROM notes_tags 
+                                  WHERE ID_note = (?)''', note_id)
+                connection.commit()
+            else:
+                # Step 1.2: form lists of tags to delete and to add
+                tags_to_delete = []
+                tags_to_add = []
+                tuple_of_tags = cursor.execute(
+                '''SELECT tag FROM notes_tags 
+                   LEFT JOIN tags 
+                   ON tags.ID_tag = notes_tags.ID_tag
+                   WHERE notes_tags.ID_note = (?)''', note_id).fetchall()
+                for item in tuple_of_tags:
+                    if item[0] not in input_dictionary['tags']:
+                        tags_to_delete.append(item[0])
+                for tag in input_dictionary['tags']:
+                    if (tag,) not in tuple_of_tags:
+                        tags_to_add.append(tag)
+                # Step 1.3: delete odd tags
+                for tag in tags_to_delete:
+                    tag_id_to_delete = return_tag_id(cursor, connection, tag)
+                    tuple_to_delete = (note_id[0], tag_id_to_delete[0])
+                    cursor.execute('''
+                        DELETE FROM notes_tags
+                        WHERE ID_note = (?)
+                        AND ID_tag = (?)''', tuple_to_delete)
+                    connection.commit()
+                # Step 1.4: add new tags
+                for tag in tags_to_add:
+                    # Step 1.4.1: check if tag is completely new and
+                    # add it to table tags in that case
+                    current_tags_in_base = return_tag_dictionary(
+                            cursor, connection
+                            )
+                    if tag in current_tags_in_base:
+                        pass
+                    else:
+                        cursor.execute('''
+                            INSERT INTO tags
+                            VALUES (Null, ?)''', (tag,))
+                        connection.commit()
+                    # Step 1.4.2: connect the note to the tag
+                    tag_id_to_add = return_tag_id(cursor, connection, tag)
+                    tuple_to_add = (note_id[0], tag_id_to_add[0])
+                    cursor.execute('''
+                        INSERT INTO notes_tags
+                        VALUES (?, ?)''', tuple_to_add)
+                    connection.commit()
+        else:
+            pass
 
 # AUXILIARY FUNCTIONS
-def transform_input_dictionary_tasker_ch(input_dictionary):
-    # auxiliary function that transform input note to a normal structure
-    # Used in tasker_ch().
-    # TODO currently here
-    output_dictionary = {}
-    output_dictionary['beginning'] = input_dictionary['beginning']
-    output_dictionary['command_one'] = input_dictionary['command']
-    output_dictionary['IDs'] = input_dictionary['IDs']
+def add_tags_to_note(cursor, connection, note_id, tags):
+    # an auxiliary function that adds tags to the note specified.
+    # Used directly in tasker_add() and tasker_ch().
+    # tests are in tests.py
+    # Step 0: check if there is no tags and nothing should be done
+    if tags != []:
+        current_tags = return_tag_dictionary(cursor, connection)
+        for tag in tags:
+            # Step 1: check if the tag is already connected with the note
+            # so that tag need to be omitted
+            tuple_for_check = (tag, str(note_id))
+            note_tag_check = cursor.execute(
+                    """SELECT * FROM notes_tags 
+                       JOIN tags on tags.ID_tag = notes_tags.ID_tag 
+                       WHERE tag = (?) AND notes_tags.ID_note = (?)""", 
+                       tuple_for_check
+                       )
+            connection.commit()
+            if note_tag_check.fetchone() is None:
+                # Step 2: actual enter to table notes-tags
+                if tag in current_tags:
+                    # there is [0] in the line below as return_tag_id() 
+                    # returns tuple (while integer is needed).
+                    tag_id_for_insertion = return_tag_id(
+                                cursor, connection, tag)[0]
+                else:
+                    cursor.execute("""insert into tags VALUES (Null, ?)""", (
+                        tag,)
+                        )
+                    connection.commit()
+                    tag_id_for_insertion = last_record_id(
+                        cursor, connection, 'tags'
+                        )
+                tuple_for_insert = (str(note_id), str(tag_id_for_insertion))
+                cursor.execute("""insert into notes_tags VALUES (?, ?)""", 
+                        tuple_for_insert
+                       )
+                connection.commit()
 
-
-def initial_check_tasker_ch(input_dictionary):
+def initial_check_tasker_ch(cursor, connection, input_dictionary):
     # auxiliary function for tasker_ch() that checks if all the 
-    # necessary parameters are entered
-    note_to_check = input_dictionary['note'].strip().split('ch', 1)
-    if (len(note_to_check) < 2) or ('' in note_to_check):
+    # necessary parameters are entered. Used directly in tasker_ch().
+    # tests are in tests.py
+    # TODO try to write complete set of tests according to The Art
+    # of Software Testing, see issue #57
+    if input_dictionary['extra note'] == '':
         return False
+    # Check, that ID is entered and its exactly one value (not many)
+    if 'IDs' in input_dictionary:
+        if len(input_dictionary['IDs']) > 1:
+            return False 
     else:
-        return True
+        return False
+    # Check if there is a note with the ID given
+    note_id_to_seek = input_dictionary['IDs']
+    cursor.execute('''SELECT * 
+                      FROM notes 
+                      WHERE ID_note = (?)''', note_id_to_seek)
+    if cursor.fetchone() is None:
+        return False
+    # Check that key 'hashtag' exists
+    if 'hashtag' not in input_dictionary:
+        return False
+    return True
 
 def return_tags_intersection(cursor, connection, tag_list):
     # an auxiliary function that returns list of notes 
@@ -228,8 +328,6 @@ def tasker_add_check(input_dictionary):
     if input_dictionary['note'] == '':
         return False
     # Step 2: check if at least one tag is entered
-    # if input_dictionary['tags'] == []:
-    #    return False
     return True
 
 def return_tag_dictionary(cursor, connection):
@@ -344,6 +442,7 @@ def convert_input_to_dictionary(input_string):
     resulting_dictionary['extra note'] = ''
     resulting_dictionary['tags'] = []
     resulting_dictionary['IDs'] = []
+    resulting_dictionary['hashtag'] = 0
     if len(additional_list) > 1:
         resulting_dictionary['command'] = additional_list[1]
     if len(additional_list) > 2:
@@ -355,7 +454,8 @@ def convert_input_to_dictionary(input_string):
             check2 = re.compile('''\D+''')
             result_check1 = check1.search(splitted_note[0])
             result_check2 = check2.search(splitted_note[0])
-            if (result_check1 is not None) and (result_check2 is None) and (splitted_note[1] == 'ch'):
+            if (result_check1 is not None) and (
+                    result_check2 is None) and (splitted_note[1] == 'ch'):
                 resulting_dictionary['IDs'] = return_IDs(
                         splitted_note[0].strip()
                         )
@@ -366,6 +466,7 @@ def convert_input_to_dictionary(input_string):
             resulting_dictionary['IDs'] = return_IDs(additional_list[2])
     if no_hash_check(input_string) == False:
         resulting_dictionary['tags'] = return_tags(trailing_string)
+        resulting_dictionary['hashtag'] = 1
     return(resulting_dictionary)
 
 def return_IDs(input_string):
@@ -445,6 +546,9 @@ def initial_input_check(input_string):
         return True
     else:
         return False
+
+
+
 
 # auxiliary functions for test purpose only (used only in doctests and
 # unittests)
