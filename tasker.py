@@ -1,6 +1,6 @@
-# Version: 46
-# Date: 15.1.18
-# Time: 22:04 GMT+5
+# Version: 47
+# Date: 16.1.18
+# Time: 1:39 GMT+5
 
 
 # IMPORTS
@@ -69,7 +69,10 @@ def tasker_add(cursor, connection, input_dictionary):
         cursor.execute("""insert into notes VALUES (Null, ?)""", 
                 (input_dictionary['note'],))
         connection.commit()
-        note_id_for_insertion = last_record_id(cursor, connection, 'notes')
+        note_id_for_insertion = (last_record_id(
+                                        cursor, 
+                                        connection, 
+                                        'notes'),)
         tags_for_insertion = input_dictionary['tags']
         add_tags_to_note(
                 cursor, 
@@ -149,7 +152,7 @@ def tasker_ch(cursor, connection, input_dictionary):
     if initial_check_tasker_ch(
             cursor, connection, input_dictionary
             ) == False:
-        raise Warning('Initial check for tasker ch failed')    
+        print('Initial check for tasker ch failed')    
     else:
         try:
             # Step 0: Change the text of the note
@@ -171,52 +174,20 @@ def tasker_ch(cursor, connection, input_dictionary):
                                       WHERE ID_note = (?)''', note_id)
                     connection.commit()
                 else:
-                    # Step 1.2: form lists of tags to delete and to add
-                    tags_to_delete = []
-                    tags_to_add = []
-                    tuple_of_tags = cursor.execute(
-                    '''SELECT tag FROM notes_tags 
-                       LEFT JOIN tags 
-                       ON tags.ID_tag = notes_tags.ID_tag
-                       WHERE notes_tags.ID_note = (?)''', note_id).fetchall()
-                    for item in tuple_of_tags:
-                        if item[0] not in input_dictionary['tags']:
-                            tags_to_delete.append(item[0])
-                    for tag in input_dictionary['tags']:
-                        if (tag,) not in tuple_of_tags:
-                            tags_to_add.append(tag)
-                    # Step 1.3: delete odd tags
-                    for tag in tags_to_delete:
-                        tag_id_to_delete = return_tag_id(
-                                cursor, connection, tag)
-                        tuple_to_delete = (note_id[0], tag_id_to_delete[0])
-                        cursor.execute('''
-                            DELETE FROM notes_tags
-                            WHERE ID_note = (?)
-                            AND ID_tag = (?)''', tuple_to_delete)
-                        connection.commit()
-                    # Step 1.4: add new tags
-                    for tag in tags_to_add:
-                        # Step 1.4.1: check if tag is completely new and
-                        # add it to table tags in that case
-                        current_tags_in_base = return_tag_dictionary(
-                                cursor, connection
-                                )
-                        if tag in current_tags_in_base:
-                            pass
-                        else:
-                            cursor.execute('''
-                                INSERT INTO tags
-                                VALUES (Null, ?)''', (tag,))
-                            connection.commit()
-                        # Step 1.4.2: connect the note to the tag
-                        tag_id_to_add = return_tag_id(
-                                cursor, connection, tag)
-                        tuple_to_add = (note_id[0], tag_id_to_add[0])
-                        cursor.execute('''
-                            INSERT INTO notes_tags
-                            VALUES (?, ?)''', tuple_to_add)
-                        connection.commit()
+                    # Step 1.2: delete odd tags
+                    delete_tags_from_note(
+                            cursor, 
+                            connection, 
+                            note_id, 
+                            input_dictionary['tags']
+                            )
+                    # Step 1.3: add new tags
+                    add_tags_to_note(
+                            cursor, 
+                            connection, 
+                            note_id, 
+                            input_dictionary['tags']
+                            )
             else:
                 pass
         except Warning:
@@ -227,40 +198,64 @@ def add_tags_to_note(cursor, connection, note_id, tags):
     # an auxiliary function that adds tags to the note specified.
     # Used directly in tasker_add() and tasker_ch().
     # tests are in tests.py
-    # Step 0: check if there is no tags and nothing should be done
-    if tags != []:
-        current_tags = return_tag_dictionary(cursor, connection)
-        for tag in tags:
-            # Step 1: check if the tag is already connected with the note
-            # so that tag need to be omitted
-            tuple_for_check = (tag, str(note_id))
-            note_tag_check = cursor.execute(
-                    """SELECT * FROM notes_tags 
-                       JOIN tags on tags.ID_tag = notes_tags.ID_tag 
-                       WHERE tag = (?) AND notes_tags.ID_note = (?)""", 
-                       tuple_for_check
-                       )
+    # Step 1: form lists of tags to add
+    tags_to_add = []
+    tuple_of_tags = cursor.execute(
+    '''SELECT tag FROM notes_tags 
+       LEFT JOIN tags 
+       ON tags.ID_tag = notes_tags.ID_tag
+       WHERE notes_tags.ID_note = (?)''', note_id).fetchall()
+    for tag in tags:
+        if (tag,) not in tuple_of_tags:
+            tags_to_add.append(tag)
+    # Step 2: add new tags
+    for tag in tags_to_add:
+        # Step 2.1: check if tag is completely new and
+        # add it to table tags in that case
+        current_tags_in_base = return_tag_dictionary(
+                cursor, connection
+                )
+        if tag in current_tags_in_base:
+            pass
+        else:
+            cursor.execute('''
+                INSERT INTO tags
+                VALUES (Null, ?)''', (tag,))
             connection.commit()
-            if note_tag_check.fetchone() is None:
-                # Step 2: actual enter to table notes-tags
-                if tag in current_tags:
-                    # there is [0] in the line below as return_tag_id() 
-                    # returns tuple (while integer is needed).
-                    tag_id_for_insertion = return_tag_id(
-                                cursor, connection, tag)[0]
-                else:
-                    cursor.execute("""insert into tags VALUES (Null, ?)""", (
-                        tag,)
-                        )
-                    connection.commit()
-                    tag_id_for_insertion = last_record_id(
-                        cursor, connection, 'tags'
-                        )
-                tuple_for_insert = (str(note_id), str(tag_id_for_insertion))
-                cursor.execute("""insert into notes_tags VALUES (?, ?)""", 
-                        tuple_for_insert
-                       )
-                connection.commit()
+        # Step 2.2: connect the note to the tag
+        tag_id_to_add = return_tag_id(
+                        cursor, connection, tag)
+        tuple_to_add = (str(note_id[0]), str(tag_id_to_add[0]))
+        cursor.execute('''
+            INSERT INTO notes_tags
+            VALUES (?, ?)''', tuple_to_add)
+        connection.commit()
+
+def delete_tags_from_note(cursor, connection, note_id, tags):
+    # an auxiliary function that adds tags to the note specified.
+    # Used directly in tasker_ch().
+    # tests are in tests.py
+    # Step 1: form lists of tags to delete
+    tags_to_delete = []
+    tuple_of_tags = cursor.execute(
+    '''SELECT tag FROM notes_tags 
+       LEFT JOIN tags 
+       ON tags.ID_tag = notes_tags.ID_tag
+       WHERE notes_tags.ID_note = (?)''', note_id).fetchall()
+    for item in tuple_of_tags:
+        if item[0] in tags:
+            tags_to_delete.append(item[0])
+    # Step 2: delete odd tags
+    for tag in tags_to_delete:
+        tag_id_to_delete = return_tag_id(
+                            cursor, connection, tag)
+        tuple_to_delete = (str(note_id[0]), str(tag_id_to_delete[0]))
+        cursor.execute('''
+            DELETE FROM notes_tags
+            WHERE ID_note = (?)
+            AND ID_tag = (?)''', tuple_to_delete)
+        connection.commit()
+
 
 def initial_check_tasker_ch(cursor, connection, input_dictionary):
     # auxiliary function for tasker_ch() that checks if all the 

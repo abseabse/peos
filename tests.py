@@ -1,6 +1,6 @@
-# Version: 16
-# Date: 15.1.18
-# Time: 2:23 GMT+5
+# Version: 17
+# Date: 16.1.18
+# Time: 1:39 GMT+5
 
 
 # IMPORTS
@@ -1089,7 +1089,7 @@ class Test_add_tags_to_note(unittest.TestCase):
         tasker.add_tags_to_note(
                 test_cursor, 
                 test_connection,
-                1,
+                (1,),
                 ['ronyal', 'o kale', 'bol']
                 )
         self.assertEqual(
@@ -1104,6 +1104,50 @@ class Test_add_tags_to_note(unittest.TestCase):
                 {'ronyal': 1, 'iskal': 1, 'o kale': 2, 'bol': 1}
                 )
 
+class Test_delete_tags_from_note(unittest.TestCase):
+    # tests for function delete_tags_from_note() in tasker.py
+    
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal', 'kal']}
+                )
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak', 
+                 'tags': ['o kale', 'ronyal']}
+                )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        self.assertEqual(
+                tasker.tasker_tags(
+                            test_cursor, 
+                            test_connection, 
+                            {}
+                            ),
+                {'ronyal': 2, 'kal': 1, 'o kale': 1, 'iskal': 1}
+                ) 
+        tasker.delete_tags_from_note(
+                test_cursor, 
+                test_connection, 
+                (1,), 
+                ['iskal', 'vot imenno']
+                )
+        self.assertEqual(
+                tasker.tasker_tags(
+                            test_cursor, 
+                            test_connection, 
+                            {}
+                            ),
+                {'ronyal': 2, 'kal': 1, 'o kale': 1}
+                )
 
 # MAIN CYCLE
 if __name__ == '__main__':
