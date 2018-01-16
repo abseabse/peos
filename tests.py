@@ -1,6 +1,6 @@
-# Version: 17
+# Version: 18
 # Date: 16.1.18
-# Time: 1:39 GMT+5
+# Time: 21:54 GMT+5
 
 
 # IMPORTS
@@ -1051,18 +1051,17 @@ class Test_tasker_ch(unittest.TestCase):
                 )
 
     def test_two(self):
-        with self.assertRaises(Warning):
-            tasker.tasker_ch(
-                    test_cursor, 
-                    test_connection,
-                    {'beginning': 'tasker',
-                    'command': 'ch',
-                    'note': '',
-                    'extra note': 'kal',
-                    'hashtag': 1,
-                    'tags': ['ronyal', 'iskal'],
-                    'IDs': [35]}
-                    )
+        tasker.tasker_ch(
+                test_cursor, 
+                test_connection,
+                {'beginning': 'tasker',
+                 'command': 'ch',
+                 'note': '',
+                 'extra note': 'kal',
+                 'hashtag': 1,
+                 'tags': ['ronyal', 'iskal'],
+                 'IDs': [35]}
+                )
 
 class Test_add_tags_to_note(unittest.TestCase):
     # tests for function add_tags_to_note() in tasker.py

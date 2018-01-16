@@ -1,6 +1,6 @@
-# Version: 47
+# Version: 48
 # Date: 16.1.18
-# Time: 1:39 GMT+5
+# Time: 21:53 GMT+5
 
 
 # IMPORTS
@@ -255,7 +255,6 @@ def delete_tags_from_note(cursor, connection, note_id, tags):
             WHERE ID_note = (?)
             AND ID_tag = (?)''', tuple_to_delete)
         connection.commit()
-
 
 def initial_check_tasker_ch(cursor, connection, input_dictionary):
     # auxiliary function for tasker_ch() that checks if all the 
