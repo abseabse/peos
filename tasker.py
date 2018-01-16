@@ -1,6 +1,6 @@
-# Version: 48
+# Version: 49
 # Date: 16.1.18
-# Time: 21:53 GMT+5
+# Time: 22:26 GMT+5
 
 
 # IMPORTS
@@ -147,8 +147,6 @@ def tasker_tags(cursor, connection, input_dictionary):
 def tasker_ch(cursor, connection, input_dictionary):
     # function that changes the note and its tags if specified
     # tests are in tests.py
-    # TODO move the part of the function to add_tags_to_note(),
-    # see issue #58
     if initial_check_tasker_ch(
             cursor, connection, input_dictionary
             ) == False:
@@ -174,12 +172,23 @@ def tasker_ch(cursor, connection, input_dictionary):
                                       WHERE ID_note = (?)''', note_id)
                     connection.commit()
                 else:
-                    # Step 1.2: delete odd tags
+                    # Step 1.2: select odd tags
+                    tags_to_delete = []
+                    tuple_of_tags = cursor.execute(
+                    '''SELECT tag FROM notes_tags 
+                       LEFT JOIN tags 
+                       ON tags.ID_tag = notes_tags.ID_tag
+                       WHERE notes_tags.ID_note = (?)''', 
+                       note_id).fetchall()
+                    for item in tuple_of_tags:
+                        if item[0] not in input_dictionary['tags']:
+                            tags_to_delete.append(item[0])
+                    # Step 1.3: delete odd tags
                     delete_tags_from_note(
                             cursor, 
                             connection, 
                             note_id, 
-                            input_dictionary['tags']
+                            tags_to_delete
                             )
                     # Step 1.3: add new tags
                     add_tags_to_note(
@@ -243,7 +252,7 @@ def delete_tags_from_note(cursor, connection, note_id, tags):
        ON tags.ID_tag = notes_tags.ID_tag
        WHERE notes_tags.ID_note = (?)''', note_id).fetchall()
     for item in tuple_of_tags:
-        if item[0] in tags:
+        if item[0] in tags: # maybe to revert the function
             tags_to_delete.append(item[0])
     # Step 2: delete odd tags
     for tag in tags_to_delete:
