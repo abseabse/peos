@@ -1,6 +1,6 @@
-# Version: 50
+# Version: 51
 # Date: 17.1.18
-# Time: 1:08 GMT+5
+# Time: 1:59 GMT+5
 
 
 # IMPORTS
@@ -139,7 +139,7 @@ def tasker_tags(cursor, connection, input_dictionary):
     # with notes quanitity accordingly.
     # tests are in tests.py
     # TODO remove mess in the function's end, see issue #44
-    list_of_tags = return_tag_dictionary(cursor, connection)
+    list_of_tags = return_used_tag_dictionary(cursor, connection)
     for key, value in list_of_tags.items():
         print(key+": ", value) 
     return list_of_tags
@@ -222,9 +222,10 @@ def add_tags_to_note(cursor, connection, note_id, tags):
     for tag in tags_to_add:
         # Step 2.1: check if tag is completely new and
         # add it to table tags in that case
-        current_tags_in_base = return_tag_dictionary(
-                cursor, connection
-                )
+        current_tags_in_base = []
+        list_of_tags = cursor.execute("""SELECT tag from tags""")
+        for item in list_of_tags:
+            current_tags_in_base.append(item[0])
         if tag in current_tags_in_base:
             pass
         else:
@@ -338,9 +339,10 @@ def tasker_add_check(input_dictionary):
     # Step 2: check if at least one tag is entered
     return True
 
-def return_tag_dictionary(cursor, connection):
+def return_used_tag_dictionary(cursor, connection):
     # an auxiliary function that returns dictionary of tags.
-    # tests are in tests.py
+    # Used directly in tasker_tags().
+    # tests are in tests.py 
     list_of_tags = cursor.execute("""SELECT tag, count(*) 
             FROM notes_tags LEFT JOIN tags ON tags.ID_tag=notes_tags.ID_tag 
             GROUP BY notes_tags.ID_tag""")

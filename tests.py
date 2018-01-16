@@ -1,6 +1,6 @@
-# Version: 19
+# Version: 20
 # Date: 17.1.18
-# Time: 1:08 GMT+5
+# Time: 1:59 GMT+5
 
 
 # IMPORTS
@@ -127,7 +127,8 @@ class Test_tasker_add(unittest.TestCase):
                  'tags': ['ronyal', 'iskal', 'is kal', 'o kale']}
                 )
         self.assertEqual(
-                tasker.return_tag_dictionary(test_cursor, test_connection), 
+                tasker.return_used_tag_dictionary(
+                    test_cursor, test_connection), 
                 {'ronyal': 1, 'iskal': 1, 'is kal': 1, 'o kale': 1}
                 )
 
@@ -203,8 +204,8 @@ class Test_tasker_add_check(unittest.TestCase):
                 )
 
 
-class Test_return_tag_dictionary(unittest.TestCase):
-    # tests for return_tag_dictionary() in tasker.py
+class Test_return_used_tag_dictionary(unittest.TestCase):
+    # tests for return_used_tag_dictionary() in tasker.py
 
     def setUp(self):
         tasker.create_tables(test_cursor, test_connection)
@@ -214,7 +215,8 @@ class Test_return_tag_dictionary(unittest.TestCase):
 
     def test_one(self):
         self.assertEqual(
-                tasker.return_tag_dictionary(test_cursor, test_connection), 
+                tasker.return_used_tag_dictionary(
+                    test_cursor, test_connection), 
                 {}
                 )
 
@@ -228,7 +230,8 @@ class Test_return_tag_dictionary(unittest.TestCase):
                  'tags': ['iskal', 'ronyal', 'is kal']}
                 )
         self.assertEqual(
-                tasker.return_tag_dictionary(test_cursor, test_connection),
+                tasker.return_used_tag_dictionary(
+                    test_cursor, test_connection),
                 {'ronyal': 1, 'iskal': 1, 'is kal': 1}
                 )
 
@@ -534,12 +537,14 @@ class Test_clear_all(unittest.TestCase):
 
     def test_one(self):
         self.assertEqual(
-                tasker.return_tag_dictionary(test_cursor, test_connection), 
+                tasker.return_used_tag_dictionary(
+                    test_cursor, test_connection), 
                 {'ronyal': 1}
                 )
         tasker.clear_all(test_cursor, test_connection)
         self.assertEqual(
-                tasker.return_tag_dictionary(test_cursor, test_connection), 
+                tasker.return_used_tag_dictionary(
+                    test_cursor, test_connection), 
                 {}
                 )
 
