@@ -1,6 +1,6 @@
-# Version: 49
-# Date: 16.1.18
-# Time: 22:26 GMT+5
+# Version: 50
+# Date: 17.1.18
+# Time: 1:08 GMT+5
 
 
 # IMPORTS
@@ -154,14 +154,15 @@ def tasker_ch(cursor, connection, input_dictionary):
     else:
         try:
             # Step 0: Change the text of the note
-            tuple_to_substitute = (
+            if input_dictionary['extra note'] != '':
+                tuple_to_substitute = (
                     input_dictionary['extra note'], 
                     str(input_dictionary['IDs'][0])
                     )
-            cursor.execute(
+                cursor.execute(
                     '''UPDATE notes set note = (?) WHERE ID_note = (?)''', 
                     (tuple_to_substitute))
-            connection.commit()
+                connection.commit()
             # Step 1: Change the tags of the note
             if input_dictionary['hashtag'] == 1:
                 note_id = input_dictionary['IDs']
@@ -271,11 +272,9 @@ def initial_check_tasker_ch(cursor, connection, input_dictionary):
     # tests are in tests.py
     # TODO try to write complete set of tests according to The Art
     # of Software Testing, see issue #57
-    if input_dictionary['extra note'] == '':
-        return False
     # Check, that ID is entered and its exactly one value (not many)
     if 'IDs' in input_dictionary:
-        if len(input_dictionary['IDs']) > 1:
+        if len(input_dictionary['IDs']) != 1:
             return False 
     else:
         return False
@@ -458,17 +457,20 @@ def convert_input_to_dictionary(input_string):
         if check_if_note_contains_only_IDs(additional_list[2]) == False:
             # transform input_dictionary if case of command 'ch' (changing
             # note)
-            splitted_note = additional_list[2].split(' ', 2)
-            check1 = re.compile('''\d+''')
-            check2 = re.compile('''\D+''')
-            result_check1 = check1.search(splitted_note[0])
-            result_check2 = check2.search(splitted_note[0])
-            if (result_check1 is not None) and (
-                    result_check2 is None) and (splitted_note[1] == 'ch'):
-                resulting_dictionary['IDs'] = return_IDs(
+            if resulting_dictionary['command'] == 'ch':
+                splitted_note = additional_list[2].split(' ', 1)
+                check1 = re.compile('''\d+''')
+                check2 = re.compile('''\D+''')
+                result_check1 = check1.search(splitted_note[0])
+                result_check2 = check2.search(splitted_note[0])
+                if (result_check1 is not None) and (
+                        result_check2 is None):
+                    resulting_dictionary['IDs'] = return_IDs(
                         splitted_note[0].strip()
                         )
-                resulting_dictionary['extra note'] = splitted_note[2]
+                    resulting_dictionary['extra note'] = splitted_note[1]
+                else:
+                    resulting_dictionary['note'] = additional_list[2]
             else:
                 resulting_dictionary['note'] = additional_list[2]          
         else:

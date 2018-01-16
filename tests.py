@@ -1,6 +1,6 @@
-# Version: 18
-# Date: 16.1.18
-# Time: 21:54 GMT+5
+# Version: 19
+# Date: 17.1.18
+# Time: 1:08 GMT+5
 
 
 # IMPORTS
@@ -423,7 +423,7 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': 'ch', 
                  'note': '', 
-                 'extra note': 'gogakal',
+                 'extra note': 'ch gogakal',
                  'hashtag': 1,
                  'tags': ['ronyal', 'iskal'],
                  'IDs': [1]
@@ -436,11 +436,11 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                     'tasker ch 1 2 ch gogakal # ronyal, iskal'),
                 {'beginning': 'tasker', 
                  'command': 'ch', 
-                 'note': '1 2 ch gogakal', 
-                 'extra note': '',
+                 'note': '', 
+                 'extra note': '2 ch gogakal',
                  'hashtag': 1,
                  'tags': ['ronyal', 'iskal'],
-                 'IDs': []
+                 'IDs': [1]
                  }
                 )
 
@@ -493,12 +493,26 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                 {'beginning': 'tasker', 
                  'command': 'ch', 
                  'note': '', 
-                 'extra note': 'gogakal is kal',
+                 'extra note': 'ch gogakal is kal',
                  'hashtag': 1,
                  'tags': [],
                  'IDs': [1]
                  }
                 )
+
+    def test_eleven(self):
+        self.assertEqual(
+                tasker.convert_input_to_dictionary(
+                    'tasker ch 2 gogakal # ronyal, iskal'),
+                 {'beginning': 'tasker', 
+                  'command': 'ch', 
+                  'note': '', 
+                  'extra note': 'gogakal',
+                  'hashtag': 1,
+                  'tags': ['ronyal', 'iskal'],
+                  'IDs': [2]
+                  }
+                 )
 
 class Test_clear_all(unittest.TestCase):
     # tests for function clear_all() in tasker.py
