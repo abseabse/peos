@@ -1,6 +1,6 @@
-# Version: 20
+# Version: 21
 # Date: 17.1.18
-# Time: 1:59 GMT+5
+# Time: 23:18 GMT+5
 
 
 # IMPORTS
@@ -148,14 +148,46 @@ class Test_tasker_add(unittest.TestCase):
                 {1: 'gogakal'}
                 )
 
-    def test_three(self):
-        with self.assertRaises(Warning): 
+    def test_three(self): 
             tasker.tasker_add(test_cursor, test_connection,
                     {'beginning': 'tasker', 
                      'command': 'add', 
                      'note': '', 
                      'tags': ['ronyal', 'iskal', 'is kal']}
                     )
+            self.assertEqual(
+                    tasker.tasker_tags(
+                        test_cursor,
+                        test_connection,
+                        {}
+                        ),
+                    {'ronyal': 0, 'iskal': 0, 'is kal': 0}
+                    )
+            tasker.tasker_add(test_cursor, test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'add', 
+                     'note': 'gogakal', 
+                     'tags': ['iskal', 'is kal', 'mnoga']}
+                    )
+            self.assertEqual(
+                    tasker.tasker_tags(
+                        test_cursor,
+                        test_connection,
+                        {}
+                        ),
+                    {'ronyal': 0, 'iskal': 1, 'is kal': 1, 'mnoga': 1}
+                    )
+
+    def test_four(self):
+        self.assertEqual(
+            tasker.tasker_add(test_cursor, test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'add', 
+                     'note': '', 
+                     'tags': []}
+                    ),
+            'Error'
+            )
 
 
 class Test_tasker_add_check(unittest.TestCase):
@@ -177,7 +209,7 @@ class Test_tasker_add_check(unittest.TestCase):
                 )
     
     def test_two(self):
-        self.assertFalse(
+        self.assertTrue(
                 tasker.tasker_add_check(
                     {'beginning': 'tasker', 
                      'command': 'add', 
@@ -1164,8 +1196,54 @@ class Test_delete_tags_from_note(unittest.TestCase):
                             test_connection, 
                             {}
                             ),
-                {'ronyal': 2, 'kal': 1, 'o kale': 1}
+                {'ronyal': 2, 'kal': 1, 'o kale': 1, 'iskal': 0}
                 )
+
+class Test_add_tags(unittest.TestCase):
+    # tests for function add_tags() in tasker.py
+    
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal']}
+                )
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak', 
+                 'tags': ['o kale']}
+                )
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        self.assertEqual(
+                tasker.tasker_tags(
+                            test_cursor, 
+                            test_connection, 
+                            {}
+                            ),
+                {'ronyal': 1, 'iskal': 1, 'o kale': 1}
+                )
+        tasker.add_tags(
+                test_cursor, 
+                test_connection, 
+                ['ronyal', 'foo']
+                )
+        self.assertEqual(
+                tasker.tasker_tags(
+                            test_cursor, 
+                            test_connection, 
+                            {}
+                            ),
+                {'ronyal': 1, 'iskal': 1, 'o kale': 1, 'foo': 0}
+                )
+
+
 
 # MAIN CYCLE
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
-# Version: 51
+# Version: 52
 # Date: 17.1.18
-# Time: 1:59 GMT+5
+# Time: 23:18 GMT+5
 
 
 # IMPORTS
@@ -64,24 +64,30 @@ def tasker_add(cursor, connection, input_dictionary):
     # function that adds new note.
     # tests are in tests.py
     if tasker_add_check(input_dictionary) is False:
-        raise Warning('Shit has happened')
-    try:
-        cursor.execute("""insert into notes VALUES (Null, ?)""", 
-                (input_dictionary['note'],))
-        connection.commit()
-        note_id_for_insertion = (last_record_id(
-                                        cursor, 
-                                        connection, 
-                                        'notes'),)
-        tags_for_insertion = input_dictionary['tags']
-        add_tags_to_note(
-                cursor, 
-                connection, 
-                note_id_for_insertion,
-                tags_for_insertion
-                )
-    except Warning:
-        return('Error: Shit has happened')
+        print('Not enough parameters are entered')
+        return('Error')
+    else:
+        try:
+            if input_dictionary['note'] != '':
+                print('dooo')
+                cursor.execute("""insert into notes VALUES (Null, ?)""", 
+                        (input_dictionary['note'],))
+                connection.commit()
+                note_id_for_insertion = (last_record_id(
+                                            cursor, 
+                                            connection, 
+                                            'notes'),)
+                tags_for_insertion = input_dictionary['tags']
+                add_tags_to_note(
+                        cursor, 
+                        connection, 
+                        note_id_for_insertion,
+                        tags_for_insertion
+                        )
+            else:
+                add_tags(cursor, connection, input_dictionary['tags'])
+        except Warning:
+            return('Error in tasker_add()')
 
 def tasker_get(cursor, connection, input_dictionary):
     # function that returns list of notes with tags from input.
@@ -133,16 +139,22 @@ def tasker_quit(input_dictionary):
         if user_command == 'y':
             sys.exit()
 
-
 def tasker_tags(cursor, connection, input_dictionary):
     # function that returns a list of all the tags 
     # with notes quanitity accordingly.
     # tests are in tests.py
     # TODO remove mess in the function's end, see issue #44
-    list_of_tags = return_used_tag_dictionary(cursor, connection)
-    for key, value in list_of_tags.items():
-        print(key+": ", value) 
-    return list_of_tags
+    list_of_used_tags = return_used_tag_dictionary(cursor, connection)
+    dictionary_of_tags = {}
+    for key, value in list_of_used_tags.items():
+        dictionary_of_tags[key] = value
+    cursor_tags = cursor.execute("""SELECT tag from tags""")
+    for item in cursor_tags:
+        if item[0] not in list_of_used_tags:
+            dictionary_of_tags[item[0]] = 0
+    for key in dictionary_of_tags:
+        print(key+": ", dictionary_of_tags[key])
+    return dictionary_of_tags
 
 def tasker_ch(cursor, connection, input_dictionary):
     # function that changes the note and its tags if specified
@@ -204,6 +216,20 @@ def tasker_ch(cursor, connection, input_dictionary):
             print('Error in tasker_ch')
 
 # AUXILIARY FUNCTIONS
+def add_tags(cursor, connection, tags):
+    # function that enters new tags into table tags. Tags already entered
+    # are omitted. Used directly in tasker_add()
+    # tests are in tests.py
+    # Step 0: get the list of tags not in the base
+    cursor_tags = cursor.execute("""SELECT tag from tags""")
+    auxiliary_list = []
+    for item in cursor_tags:
+        auxiliary_list.append(item[0])
+    list_difference = list(set(tags) - set(auxiliary_list))
+    for item in list_difference:
+        cursor.execute("""INSERT INTO tags VALUES (Null, ?)""", (item,))
+        connection.commit()
+
 def add_tags_to_note(cursor, connection, note_id, tags):
     # an auxiliary function that adds tags to the note specified.
     # Used directly in tasker_add() and tasker_ch().
@@ -333,8 +359,8 @@ def tasker_add_check(input_dictionary):
     # tests are in tests.py
     # Step 0: checks if input contains necessary keys 'beginning', 'command'
     # are in the previous more general function - command_check_dictionary()
-    # Step 1: check if note is entered
-    if input_dictionary['note'] == '':
+    # Step 1: check if note and tags are entered both
+    if (input_dictionary['note'] == '') and (input_dictionary['tags'] == []):
         return False
     # Step 2: check if at least one tag is entered
     return True
