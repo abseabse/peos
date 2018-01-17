@@ -2,7 +2,6 @@
 # Date: 17.1.18
 # Time: 23:18 GMT+5
 
-
 # IMPORTS
 import unittest
 import tasker
@@ -128,7 +127,7 @@ class Test_tasker_add(unittest.TestCase):
                 )
         self.assertEqual(
                 tasker.return_used_tag_dictionary(
-                    test_cursor, test_connection), 
+                    test_cursor, test_connection),
                 {'ronyal': 1, 'iskal': 1, 'is kal': 1, 'o kale': 1}
                 )
 
