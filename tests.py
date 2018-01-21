@@ -1,11 +1,12 @@
-# Version: 21
-# Date: 17.1.18
-# Time: 23:18 GMT+5
+# Version: 22
+# Date: 21.1.18
+# Time: 23:51 GMT+5
 
 # IMPORTS
 import unittest
 import tasker
 import sqlite3
+import curses
 
 
 # CREATING MOCK DATABASE, CONNECTION AND CURSOR FOR TESTING PURPOSES
@@ -144,7 +145,7 @@ class Test_tasker_add(unittest.TestCase):
                      'command': 'add', 
                      'note': '', 
                      'tags': []}),
-                {1: 'gogakal'}
+                {'1': 'gogakal'}
                 )
 
     def test_three(self): 
@@ -160,7 +161,7 @@ class Test_tasker_add(unittest.TestCase):
                         test_connection,
                         {}
                         ),
-                    {'ronyal': 0, 'iskal': 0, 'is kal': 0}
+                    {'ronyal': '0', 'iskal': '0', 'is kal': '0'}
                     )
             tasker.tasker_add(test_cursor, test_connection,
                     {'beginning': 'tasker', 
@@ -174,7 +175,10 @@ class Test_tasker_add(unittest.TestCase):
                         test_connection,
                         {}
                         ),
-                    {'ronyal': 0, 'iskal': 1, 'is kal': 1, 'mnoga': 1}
+                    {'ronyal': '0', 
+                     'iskal': '1', 
+                     'is kal': '1', 
+                     'mnoga': '1'}
                     )
 
     def test_four(self):
@@ -681,7 +685,10 @@ class Test_tasker_get(unittest.TestCase):
                      'note': '', 
                      'tags': []}
                     ), 
-                {1: 'gogakal', 2: 'kak je tak', 3: 'vesma kal', 4: 'pichal'}
+                {'1': 'gogakal', 
+                 '2': 'kak je tak', 
+                 '3': 'vesma kal', 
+                 '4': 'pichal'}
                 )
     
     def test_two(self):
@@ -694,7 +701,8 @@ class Test_tasker_get(unittest.TestCase):
                      'note': '', 
                      'tags': ['ronyal', 'is kal']}
                     ), 
-                {1: 'gogakal', 3: 'vesma kal'}
+                {'1': 'gogakal', 
+                 '3': 'vesma kal'}
                 )
         
     def test_three(self):
@@ -746,7 +754,7 @@ class Test_tasker_tags(unittest.TestCase):
                      'note': '', 
                      'tags': []}, 
                     ),
-                {'ronyal': 1, 'iskal': 2, 'is kal': 1, 'o kale': 1}
+                {'ronyal': '1', 'iskal': '2', 'is kal': '1', 'o kale': '1'}
                 )
 
 
@@ -796,7 +804,7 @@ class Test_tasker_rm(unittest.TestCase):
                      'note': '', 
                      'tags': ['iskal']}
                     ), 
-                {2: 'kak je tak'}
+                {'2': 'kak je tak'}
                 )
 
 
@@ -1064,7 +1072,7 @@ class Test_tasker_ch(unittest.TestCase):
                      'note': '', 
                      'tags': []}
                     ), 
-                {1: 'gogakal', 2: 'kak je tak'}
+                {'1': 'gogakal', '2': 'kak je tak'}
                 )        
         tasker.tasker_ch(
                 test_cursor, 
@@ -1086,7 +1094,7 @@ class Test_tasker_ch(unittest.TestCase):
                      'note': '', 
                      'tags': []}
                     ), 
-                {1: 'kal', 2: 'kak je tak'}
+                {'1': 'kal', '2': 'kak je tak'}
                 )
         self.assertEqual(
                 tasker.tasker_get(
@@ -1097,7 +1105,7 @@ class Test_tasker_ch(unittest.TestCase):
                      'note': '', 
                      'tags': []}
                     ), 
-                {1: 'kal', 2: 'kak je tak'}
+                {'1': 'kal', '2': 'kak je tak'}
                 )
 
     def test_two(self):
@@ -1150,7 +1158,7 @@ class Test_add_tags_to_note(unittest.TestCase):
                      'note': '', 
                      'tags': []}, 
                     ),
-                {'ronyal': 1, 'iskal': 1, 'o kale': 2, 'bol': 1}
+                {'ronyal': '1', 'iskal': '1', 'o kale': '2', 'bol': '1'}
                 )
 
 class Test_delete_tags_from_note(unittest.TestCase):
@@ -1181,7 +1189,7 @@ class Test_delete_tags_from_note(unittest.TestCase):
                             test_connection, 
                             {}
                             ),
-                {'ronyal': 2, 'kal': 1, 'o kale': 1, 'iskal': 1}
+                {'ronyal': '2', 'kal': '1', 'o kale': '1', 'iskal': '1'}
                 ) 
         tasker.delete_tags_from_note(
                 test_cursor, 
@@ -1195,7 +1203,7 @@ class Test_delete_tags_from_note(unittest.TestCase):
                             test_connection, 
                             {}
                             ),
-                {'ronyal': 2, 'kal': 1, 'o kale': 1, 'iskal': 0}
+                {'ronyal': '2', 'kal': '1', 'o kale': '1', 'iskal': '0'}
                 )
 
 class Test_add_tags(unittest.TestCase):
@@ -1226,7 +1234,7 @@ class Test_add_tags(unittest.TestCase):
                             test_connection, 
                             {}
                             ),
-                {'ronyal': 1, 'iskal': 1, 'o kale': 1}
+                {'ronyal': '1', 'iskal': '1', 'o kale': '1'}
                 )
         tasker.add_tags(
                 test_cursor, 
@@ -1239,7 +1247,7 @@ class Test_add_tags(unittest.TestCase):
                             test_connection, 
                             {}
                             ),
-                {'ronyal': 1, 'iskal': 1, 'o kale': 1, 'foo': 0}
+                {'ronyal': '1', 'iskal': '1', 'o kale': '1', 'foo': '0'}
                 )
 
 

@@ -1,12 +1,13 @@
-# Version: 52
-# Date: 17.1.18
-# Time: 23:18 GMT+5
+# Version: 53
+# Date: 21.1.18
+# Time: 23:51 GMT+5
 
 
 # IMPORTS
 import sqlite3
 import sys
 import re
+import curses
 
 
 # GLOBAL VARIABLES
@@ -44,7 +45,9 @@ def chief_function(cursor, connection, input_string):
     #TODO think about adding tests, see issue #32
     input_dictionary = convert_input_to_dictionary(input_string)
     if command_check_dictionary(input_dictionary) == False:
-        print('Error: Wrong input string. To quit type: tasker quit')
+        stdscr.addstr('Error: Wrong input string. To quit type: tasker quit')
+        curses.curs_set(0)
+        stdscr.getch()
     else:
         command = input_dictionary['command']
         if command == 'quit':
@@ -52,9 +55,9 @@ def chief_function(cursor, connection, input_string):
         if command == 'add':
             tasker_add(cursor, connection, input_dictionary)
         if command == 'get':
-            tasker_get(cursor, connection, input_dictionary)
+            return tasker_get(cursor, connection, input_dictionary)
         if command == 'tags':
-            tasker_tags(cursor, connection, input_dictionary)
+            return tasker_tags(cursor, connection, input_dictionary)
         if command == 'rm':
             tasker_rm(cursor, connection, input_dictionary)
         if command == 'ch':
@@ -69,7 +72,6 @@ def tasker_add(cursor, connection, input_dictionary):
     else:
         try:
             if input_dictionary['note'] != '':
-                print('dooo')
                 cursor.execute("""insert into notes VALUES (Null, ?)""", 
                         (input_dictionary['note'],))
                 connection.commit()
@@ -111,8 +113,7 @@ def tasker_get(cursor, connection, input_dictionary):
     # TODO remove mess in the function's end, see issue #44
     result_dictionary = {}
     for item in result:
-        print(item[0], "-", item[1])
-        result_dictionary[item[0]] = item[1]
+        result_dictionary[str(item[0])] = item[1]
     return result_dictionary
 
 def tasker_rm(cursor, connection, input_dictionary):
@@ -135,8 +136,11 @@ def tasker_quit(input_dictionary):
     if ask == 'y':
         sys.exit()
     else:
-        user_command = input('Are you sure to quit? [y] [n] \n')
-        if user_command == 'y':
+        stdscr.addstr('Are you sure to quit? [y] [n]')
+        current_cursor_position = curses.getsyx()
+        user_command = stdscr.getstr(current_cursor_position[0]+1, 0)
+        if user_command.decode() == 'y':
+            curses.endwin()
             sys.exit()
 
 def tasker_tags(cursor, connection, input_dictionary):
@@ -147,13 +151,11 @@ def tasker_tags(cursor, connection, input_dictionary):
     list_of_used_tags = return_used_tag_dictionary(cursor, connection)
     dictionary_of_tags = {}
     for key, value in list_of_used_tags.items():
-        dictionary_of_tags[key] = value
+        dictionary_of_tags[key] = str(value)
     cursor_tags = cursor.execute("""SELECT tag from tags""")
     for item in cursor_tags:
         if item[0] not in list_of_used_tags:
-            dictionary_of_tags[item[0]] = 0
-    for key in dictionary_of_tags:
-        print(key+": ", dictionary_of_tags[key])
+            dictionary_of_tags[item[0]] = '0'
     return dictionary_of_tags
 
 def tasker_ch(cursor, connection, input_dictionary):
@@ -586,9 +588,7 @@ def initial_input_check(input_string):
     else:
         return False
 
-
-
-
+       
 # auxiliary functions for test purpose only (used only in doctests and
 # unittests)
 def clear_all(cursor, connection):
@@ -629,9 +629,29 @@ if __name__ == '__main__':
     c.execute('''pragma foreign_keys = on''')
     create_tables(c, conn)
     quit = 1
+    stdscr = curses.initscr()
     while quit == 1:
-        user_command = input('Enter command: ')
-        if initial_input_check(user_command) == True: 
-            chief_function(c, conn, user_command)
+        curses.curs_set(1)
+        stdscr.erase()
+        stdscr.addstr('Enter command:')
+        stdscr.refresh()
+        byte_user_command = stdscr.getstr(1, 0)
+        user_command = byte_user_command.decode()
+        if initial_input_check(user_command) == True:
+            result = chief_function(c, conn, user_command)
+            if result == None: # branch for functions that returns None,
+                               # see chief_function() for details.
+                pass
+            elif type(result) == type({}):
+                for number, item in enumerate(result):
+                    string_to_print = item+": " + result[item]
+                    stdscr.addstr(number+2, 0, string_to_print)
+                    curses.curs_set(0)
+                stdscr.refresh()
+                stdscr.getkey()
+            else:
+                pass    # TODO the place for future list-of-the-lists code
         else:
-            print('gogakal')
+            current_cursor_position = curses.getsyx()
+            stdscr.addstr(current_cursor_position[0]+1, 0, 'gogakal')
+            stdscr.refresh()
