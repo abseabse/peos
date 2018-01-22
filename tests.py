@@ -1,6 +1,6 @@
-# Version: 22
-# Date: 21.1.18
-# Time: 23:51 GMT+5
+# Version: 23
+# Date: 22.1.18
+# Time: 22:09 GMT+5
 
 # IMPORTS
 import unittest
@@ -807,6 +807,16 @@ class Test_tasker_rm(unittest.TestCase):
                 {'2': 'kak je tak'}
                 )
 
+    def test_two(self):
+        tasker.tasker_rm(
+                test_cursor,
+                test_connection,
+                {'beginning': 'tasker',
+                 'command': 'tasker_rm',
+                 'note': '',
+                 'tags': [],
+                 'IDs':[10]}
+                 )
 
 class Test_return_IDs(unittest.TestCase):
     # tests for function return_IDs() in tasker.py

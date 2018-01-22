@@ -1,6 +1,6 @@
-# Version: 53
-# Date: 21.1.18
-# Time: 23:51 GMT+5
+# Version: 54
+# Date: 22.1.18
+# Time: 22:09 GMT+5
 
 
 # IMPORTS
@@ -122,11 +122,11 @@ def tasker_rm(cursor, connection, input_dictionary):
     for item in input_dictionary['IDs']:
         cursor.execute(
                 '''DELETE FROM notes_tags WHERE (ID_note = ?)''', 
-                str(item)  
+                (str(item),)  
                 )
         cursor.execute(
                 '''DELETE FROM notes WHERE (ID_note = ?)''', 
-                str(item)  
+                (str(item),)  
                 )
         connection.commit()
 
