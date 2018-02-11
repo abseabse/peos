@@ -1,6 +1,6 @@
-# Version: 55
+# Version: 56
 # Date: 11.02.18
-# Time: 10:43 GMT+5
+# Time: 11:04 GMT+5
 
 
 # IMPORTS
@@ -74,10 +74,9 @@ def tasker_add(cursor, connection, input_dictionary):
                 cursor.execute("""insert into notes VALUES (Null, ?)""", 
                         (input_dictionary['note'],))
                 connection.commit()
-                note_id_for_insertion = (last_record_id(
+                note_id_for_insertion = (last_record_id_notes(
                                             cursor, 
-                                            connection, 
-                                            'notes'),)
+                                            connection),)
                 tags_for_insertion = input_dictionary['tags']
                 add_tags_to_note(
                         cursor, 
@@ -414,20 +413,18 @@ def command_check_dictionary(input_dictionary):
         return(False)
     return(True)
 
-def last_record(cursor, connection, table):
+def last_record_notes(cursor, connection):
     # an auxiliary function that returns the last record from table 
-    # specified. Used indirectly in tasker_add().
-    #TODO deal with possible sql-injection in the function, see issue 22
+    # notes. Used indirectly in tasker_add().
     #TODO write tests, see issue 23
-    resulting_last_record = cursor.execute("""select * from {table_name} 
-            where ROWID = (SELECT MAX(ROWID) from {table_name})""".format
-            (table_name=table))
+    resulting_last_record = cursor.execute("""select * from notes 
+            where ROWID = (SELECT MAX(ROWID) from notes)""")
     return(resulting_last_record)
 
-def last_record_id(cursor, connection, table):
+def last_record_id_notes(cursor, connection):
     # an auxiliary function that returns the last record from table 
-    # specified. Used directly in tasker_add().
-    last_record_cursor = last_record(cursor, connection, table)
+    # notes. Used directly in tasker_add().
+    last_record_cursor = last_record_notes(cursor, connection)
     for item in last_record_cursor:
         return(item[0])
 
