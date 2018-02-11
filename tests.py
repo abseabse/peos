@@ -1,6 +1,6 @@
-# Version: 24
+# Version: 25
 # Date: 11.02.18
-# Time: 11:28 GMT+5
+# Time: 14:31 GMT+5
 
 # IMPORTS
 import unittest
@@ -990,50 +990,33 @@ class Test_initial_check_tasker_ch(unittest.TestCase):
                  'note': 'gogakal', 
                  'tags': ['ronyal', 'iskal']}
                 )
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'vesma', 
+                 'tags': ['ronyal', 'iskal', 'is kal']}
+                )
 
     def tearDown(self):
         tasker.drop_tables(test_cursor, test_connection)
 
     def test_one(self):
-        self.assertFalse(
-                tasker.initial_check_tasker_ch(
-                    test_cursor,
-                    test_connection,
-                    {'beginning': 'tasker', 
-                     'command': 'ch', 
-                     'note': 'goga',
-                     'extra note': 'kal',
-                     'IDs': [1]}
-                    )
-                )
-
-    def test_two(self):
-        self.assertFalse(
-                tasker.initial_check_tasker_ch(
-                    test_cursor,
-                    test_connection,
-                    {'beginning': 'tasker', 
-                     'command': 'ch', 
-                     'note': 'goga',
-                     'extra note': ''}
-                    )
-                )
-
-    def test_three(self):
+        # case: ID is given, note is in base, hashtag is given
         self.assertTrue(
                 tasker.initial_check_tasker_ch(
                     test_cursor,
                     test_connection,
                     {'beginning': 'tasker', 
                      'command': 'ch', 
-                     'note': '',
-                     'hashtag': 1,
+                     'note': 'goga',
                      'extra note': 'kal',
+                     'hashtag': 1,
                      'IDs': [1]}
                     )
                 )
 
-    def test_four(self):
+    def test_two(self):
+        # case: no ID, no note, no hashtag
         self.assertFalse(
                 tasker.initial_check_tasker_ch(
                     test_cursor,
@@ -1041,12 +1024,126 @@ class Test_initial_check_tasker_ch(unittest.TestCase):
                     {'beginning': 'tasker', 
                      'command': 'ch', 
                      'note': '',
-                     'hashtag': 1,
+                     'extra note': ''}
+                    )
+                )
+
+    def test_three(self):
+        # case: ID is given, no note, no hashtag
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': '',
                      'extra note': 'kal',
                      'IDs': [35]}
                     )
                 )
 
+    def test_four(self):
+        # case: no ID, hashtag is given
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'hashtag': 1,
+                     'extra note': 'kal',
+                     'IDs': []}
+                    )
+                )
+
+    def test_five(self):
+        # case: ID is given, note in base, no hashtag
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'extra note': 'kal',
+                     'IDs': [1]}
+                    )
+                )
+
+    def test_six(self):
+        # case: ID is given, no note, hashtag is given
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'hashtag': 0,
+                     'extra note': 'kal',
+                     'IDs': [35]}
+                    )
+                )
+        
+    def test_seven(self):
+        # case: many IDs, many notes, hashtag is given
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'hashtag': 0,
+                     'extra note': 'kal',
+                     'IDs': [1, 2]}
+                    )
+                )
+
+    def test_eight(self):
+        # case: many IDs, no notes, hashtag is given
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'hashtag': 0,
+                     'extra note': 'kal',
+                     'IDs': [35, 36]}
+                    )
+                )        
+
+    def test_nine(self):
+        # case: many IDs, many notes, no hashtag
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'extra note': 'kal',
+                     'IDs': [1, 2]}
+                    )
+                )
+
+    def test_ten(self):
+        # case: many IDs, no notes, no hashtag
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'extra note': 'kal',
+                     'IDs': [35, 36]}
+                    )
+                )        
+        
 class Test_tasker_ch(unittest.TestCase):
     # tests for function tasker_ch() in tasker.py
 
