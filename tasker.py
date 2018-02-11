@@ -1,6 +1,6 @@
-# Version: 56
+# Version: 57
 # Date: 11.02.18
-# Time: 11:04 GMT+5
+# Time: 11:14 GMT+5
 
 
 # IMPORTS
@@ -616,20 +616,6 @@ def drop_tables(cursor, connection):
     connection.commit()
 
 
-# TEST CYCLE
-if __name__ == '__main__':
-    if testmode == 1:
-        # TODO remove doubling of the code 
-        # (the same lines are in the main cycle). See issue #39.
-        conn = sqlite3.connect('example.db')
-        c = conn.cursor()
-        c.execute('''pragma foreign_keys = on''')
-        create_tables(c, conn)
-        quit = 1 
-        import doctest
-        doctest.testmod()
-
-
 # MAIN CYCLE
 if __name__ == '__main__':
     conn = sqlite3.connect('example.db')
@@ -637,6 +623,12 @@ if __name__ == '__main__':
     c.execute('''pragma foreign_keys = on''')
     create_tables(c, conn)
     quit = 1
+    
+    # TEST CYCLE
+    if testmode == 1:
+        import doctest
+        doctest.testmod()
+    
     current_cursor_position_y = 0
     max_cursor_position_y = 24
     stdscr = curses.initscr()
