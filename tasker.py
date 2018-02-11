@@ -1,20 +1,21 @@
-# Version: 52
-# Date: 17.1.18
-# Time: 23:18 GMT+5
+# Version: 62
+# Date: 11.02.18
+# Time: 23:10 GMT+5
 
 
 # IMPORTS
 import sqlite3
 import sys
 import re
+import curses
 
 
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then doctest blocks will be executed, 
                 # otherwise not
-command_list = ['add', 'quit', 'get', 'tags', 'rm', 'ch']
+command_list = ['add', 'quit', 'get', 'tags', 'rm', 'ch', 'export']
     # list of commands available, used in command_check_dictionary()
-
+export_file = 'notes.txt' # filename to export notes
 
 # FUNCTIONS
 # table functions
@@ -40,25 +41,33 @@ def create_tables(cursor, connection):
 def chief_function(cursor, connection, input_string):
     # service function that parses user input 
     # and launches as appropriate command.
-    # Used directly in main cycle.
-    #TODO think about adding tests, see issue #32
+    # Used directly in the main cycle.
+    # tests are in tests.py
+    # TODO not all tests can be completed: for commands tasker_get() and
+    # tasker_tags() I use curses and stdscr is not initialized in tests.py
+    # so these tests are omitted. Don't know how to implement them, will
+    # do later
     input_dictionary = convert_input_to_dictionary(input_string)
     if command_check_dictionary(input_dictionary) == False:
-        print('Error: Wrong input string. To quit type: tasker quit')
+        return None
     else:
         command = input_dictionary['command']
         if command == 'quit':
             tasker_quit(input_dictionary)
+            return True
         if command == 'add':
             tasker_add(cursor, connection, input_dictionary)
         if command == 'get':
-            tasker_get(cursor, connection, input_dictionary)
+            return tasker_get(cursor, connection, input_dictionary)
         if command == 'tags':
-            tasker_tags(cursor, connection, input_dictionary)
+            return tasker_tags(cursor, connection, input_dictionary)
         if command == 'rm':
             tasker_rm(cursor, connection, input_dictionary)
         if command == 'ch':
             tasker_ch(cursor, connection, input_dictionary)
+        if command == 'export':
+            tasker_export(cursor, connection)
+            return True
 
 def tasker_add(cursor, connection, input_dictionary):
     # function that adds new note.
@@ -69,14 +78,12 @@ def tasker_add(cursor, connection, input_dictionary):
     else:
         try:
             if input_dictionary['note'] != '':
-                print('dooo')
                 cursor.execute("""insert into notes VALUES (Null, ?)""", 
                         (input_dictionary['note'],))
                 connection.commit()
-                note_id_for_insertion = (last_record_id(
+                note_id_for_insertion = (last_record_id_notes(
                                             cursor, 
-                                            connection, 
-                                            'notes'),)
+                                            connection),)
                 tags_for_insertion = input_dictionary['tags']
                 add_tags_to_note(
                         cursor, 
@@ -98,8 +105,6 @@ def tasker_get(cursor, connection, input_dictionary):
     if (input_dictionary['tags'] == []) and (list_of_notes_ID == []):
         result = cursor.execute('''SELECT * FROM notes''')
     else:
-        # TODO four lines under this comment is somewhat messy. 
-        # Perhaps, need to rewrite, see issue #47
         a = ""
         for item in list_of_notes_ID:
             a = a + str(item) + ", "
@@ -111,8 +116,7 @@ def tasker_get(cursor, connection, input_dictionary):
     # TODO remove mess in the function's end, see issue #44
     result_dictionary = {}
     for item in result:
-        print(item[0], "-", item[1])
-        result_dictionary[item[0]] = item[1]
+        result_dictionary[str(item[0])] = item[1]
     return result_dictionary
 
 def tasker_rm(cursor, connection, input_dictionary):
@@ -121,11 +125,11 @@ def tasker_rm(cursor, connection, input_dictionary):
     for item in input_dictionary['IDs']:
         cursor.execute(
                 '''DELETE FROM notes_tags WHERE (ID_note = ?)''', 
-                str(item)  
+                (str(item),)  
                 )
         cursor.execute(
                 '''DELETE FROM notes WHERE (ID_note = ?)''', 
-                str(item)  
+                (str(item),)  
                 )
         connection.commit()
 
@@ -135,8 +139,11 @@ def tasker_quit(input_dictionary):
     if ask == 'y':
         sys.exit()
     else:
-        user_command = input('Are you sure to quit? [y] [n] \n')
-        if user_command == 'y':
+        stdscr.addstr('Are you sure to quit? [y] [n]')
+        current_cursor_position = curses.getsyx()
+        user_command = stdscr.getstr(current_cursor_position[0]+1, 0)
+        if user_command.decode() == 'y':
+            curses.endwin()
             sys.exit()
 
 def tasker_tags(cursor, connection, input_dictionary):
@@ -147,13 +154,11 @@ def tasker_tags(cursor, connection, input_dictionary):
     list_of_used_tags = return_used_tag_dictionary(cursor, connection)
     dictionary_of_tags = {}
     for key, value in list_of_used_tags.items():
-        dictionary_of_tags[key] = value
+        dictionary_of_tags[key] = str(value)
     cursor_tags = cursor.execute("""SELECT tag from tags""")
     for item in cursor_tags:
         if item[0] not in list_of_used_tags:
-            dictionary_of_tags[item[0]] = 0
-    for key in dictionary_of_tags:
-        print(key+": ", dictionary_of_tags[key])
+            dictionary_of_tags[item[0]] = '0'
     return dictionary_of_tags
 
 def tasker_ch(cursor, connection, input_dictionary):
@@ -214,6 +219,15 @@ def tasker_ch(cursor, connection, input_dictionary):
                 pass
         except Warning:
             print('Error in tasker_ch')
+
+def tasker_export(cursor, connection):
+    # function that export all the notes to txt.file
+    # TODO write tests for tasker_export(), see issue #77
+    notes_to_export = tasker_get(cursor, connection, {'tags': []})
+    with open (export_file, 'w') as notes_export_file:
+        for item in notes_to_export:
+            string_to_write = item + ' ' + notes_to_export[item] + '\n'
+            notes_export_file.write(string_to_write)
 
 # AUXILIARY FUNCTIONS
 def add_tags(cursor, connection, tags):
@@ -413,20 +427,17 @@ def command_check_dictionary(input_dictionary):
         return(False)
     return(True)
 
-def last_record(cursor, connection, table):
+def last_record_notes(cursor, connection):
     # an auxiliary function that returns the last record from table 
-    # specified. Used indirectly in tasker_add().
-    #TODO deal with possible sql-injection in the function, see issue 22
-    #TODO write tests, see issue 23
-    resulting_last_record = cursor.execute("""select * from {table_name} 
-            where ROWID = (SELECT MAX(ROWID) from {table_name})""".format
-            (table_name=table))
+    # notes. Used indirectly in tasker_add().
+    resulting_last_record = cursor.execute("""select * from notes 
+            where ROWID = (SELECT MAX(ROWID) from notes)""")
     return(resulting_last_record)
 
-def last_record_id(cursor, connection, table):
+def last_record_id_notes(cursor, connection):
     # an auxiliary function that returns the last record from table 
-    # specified. Used directly in tasker_add().
-    last_record_cursor = last_record(cursor, connection, table)
+    # notes. Used directly in tasker_add().
+    last_record_cursor = last_record_notes(cursor, connection)
     for item in last_record_cursor:
         return(item[0])
 
@@ -586,7 +597,17 @@ def initial_input_check(input_string):
     else:
         return False
 
-
+def slicing(string_to_slice, restriction):
+    # auxiliary function to print dictionaries. 
+    # Used in the main cycle directly.
+    # this function requires the global paremeter 'strings'
+    # to be executed properly
+    if len(string_to_slice) < restriction:
+        if string_to_slice != '':
+            strings.append(string_to_slice)
+    else:
+        strings.append(string_to_slice[:restriction])
+        slicing(string_to_slice[restriction:], restriction)
 
 
 # auxiliary functions for test purpose only (used only in doctests and
@@ -608,20 +629,6 @@ def drop_tables(cursor, connection):
     connection.commit()
 
 
-# TEST CYCLE
-if __name__ == '__main__':
-    if testmode == 1:
-        # TODO remove doubling of the code 
-        # (the same lines are in the main cycle). See issue #39.
-        conn = sqlite3.connect('example.db')
-        c = conn.cursor()
-        c.execute('''pragma foreign_keys = on''')
-        create_tables(c, conn)
-        quit = 1 
-        import doctest
-        doctest.testmod()
-
-
 # MAIN CYCLE
 if __name__ == '__main__':
     conn = sqlite3.connect('example.db')
@@ -629,9 +636,141 @@ if __name__ == '__main__':
     c.execute('''pragma foreign_keys = on''')
     create_tables(c, conn)
     quit = 1
+    
+    # TEST CYCLE
+    if testmode == 1:
+        import doctest
+        doctest.testmod()
+        pause = input('press any key to leave testmod')
+    
+    current_cursor_position_y = 0
+    max_cursor_position_y = 24
+    stdscr = curses.initscr()
     while quit == 1:
-        user_command = input('Enter command: ')
-        if initial_input_check(user_command) == True: 
-            chief_function(c, conn, user_command)
+        curses.curs_set(1)
+        # Step 0: Requesting input
+        # TODO that's definetely ugly. Rewrite to use a special command
+        # window, see issue #76.
+        stdscr.move(1,0)
+        stdscr.clrtoeol()
+        stdscr.move(2,0)
+        stdscr.clrtoeol()
+        stdscr.move(3,0)
+        stdscr.clrtoeol()
+        stdscr.move(4,0)
+        stdscr.clrtoeol()
+        stdscr.move(0,0)
+        current_cursor_position_y = 0
+        stdscr.refresh()
+        stdscr.addstr(0, 0, 'Enter command:')
+        byte_user_command = stdscr.getstr(1, 0)
+        user_command = byte_user_command.decode()
+        # TODO Write the function that updates current cursor position
+        # (user input can be rather long) instead of just incrementing it
+        # by 2.
+        current_cursor_position_y += 2
+        if initial_input_check(user_command) == True:
+            result = chief_function(c, conn, user_command)
+            if result == None: # branch for functions that returns None,
+                               # see chief_function() for details.
+                stdscr.addstr(current_cursor_position_y, 0,
+                        'Wrong input. To quit type: tasker quit')
+                stdscr.refresh()
+                stdscr.getkey()
+            elif type(result) == type({}):
+                # branch for functions that return dictionaries.
+                # Step 0: initializing variables and windows used for 
+                # output.
+                stdscr.refresh()
+                lines_max = 20
+                start_line_for_win = 5 
+                first_win = curses.newwin(
+                        lines_max, 20, 
+                        start_line_for_win, 0)
+                second_win = curses.newwin(
+                        lines_max, 20, 
+                        start_line_for_win, 21)
+                # Legend:
+                # 1. Number of lines
+                # 2. Number of columns (width)
+                # 3. Begin y
+                # 4. Begin x
+                current_cursor_position_y = 0
+                for item in result:
+                    # Step 1: define number of lines in output
+                    strings = []
+                    slicing(item, 20)
+                    lines_counter = len(strings)
+                    strings = []
+                    slicing(result[item], 20)
+                    if len(strings) > lines_counter:
+                        lines_counter = len(strings)
+                    # Step 1.0: Check if allowed number of strings reached
+                    #           and refresh the screen accordingly
+                    if (current_cursor_position_y + 
+                       lines_counter) >= lines_max-1:
+                        stdscr.refresh()
+                        first_win.refresh()
+                        second_win.refresh()
+                        stdscr.addstr(
+                            current_cursor_position_y+start_line_for_win+1, 
+                            0, 
+                            str('press any key to continue...'))
+                        stdscr.getkey()
+                        # The addstr under deletes the 'press any key ...' 
+                        # on the screen. Ugly.
+                        stdscr.addstr(
+                            current_cursor_position_y+start_line_for_win+1, 
+                            0, 
+                            str('                            '))
+                        first_win.clear()
+                        second_win.clear()
+                        current_cursor_position_y = 0
+                    # Step 2: adding strings to the first column
+                    strings = []
+                    slicing(item, 20)
+                    current_line_number = 0
+                    for resulting_item in strings:
+                        first_win.addstr(
+                            current_cursor_position_y+current_line_number, 0,
+                            resulting_item)
+                        current_line_number += 1
+                    # Step 2.0: adding empty strings if number of 
+                    #           added lines is smaller than the maximum 
+                    #           lines number
+                    # TODO that piece of code is a bit ugly, 
+                    # maybe, rewrite it?
+                    while current_line_number < lines_counter:
+                        first_win.addstr(' '*20)        
+                        current_line_number += 1
+                    # Step 3: adding strings to the second column
+                    strings = []
+                    slicing(result[item], 20)
+                    current_line_number = 0
+                    for resulting_item in strings:
+                        second_win.addstr(
+                            current_cursor_position_y+current_line_number, 
+                            0, 
+                            resulting_item)
+                        current_line_number += 1
+                    # Step 3.0: adding empty strings if 
+                    #           number of added lines is smaller
+                    #           than the maximum lines number
+                    while current_line_number < lines_counter:
+                        second_win.addstr(' '*20)
+                        current_line_number += 1
+                    # Step 4: updating counter of initial position y 
+                    #         for the next value not to override current
+                    current_cursor_position_y += lines_counter
+                first_win.refresh()
+                second_win.refresh()
+                curses.curs_set(0)
+                stdscr.refresh()
+                stdscr.getkey()
+
+            else:
+                pass    # TODO the place for future list-of-the-lists code
         else:
-            print('gogakal')
+            current_cursor_position = curses.getsyx()
+            stdscr.addstr(current_cursor_position[0]+1, 0, 'gogakal')
+            stdscr.refresh()

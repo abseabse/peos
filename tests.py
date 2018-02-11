@@ -1,11 +1,12 @@
-# Version: 21
-# Date: 17.1.18
-# Time: 23:18 GMT+5
+# Version: 25
+# Date: 11.02.18
+# Time: 14:31 GMT+5
 
 # IMPORTS
 import unittest
 import tasker
 import sqlite3
+import curses
 
 
 # CREATING MOCK DATABASE, CONNECTION AND CURSOR FOR TESTING PURPOSES
@@ -144,7 +145,7 @@ class Test_tasker_add(unittest.TestCase):
                      'command': 'add', 
                      'note': '', 
                      'tags': []}),
-                {1: 'gogakal'}
+                {'1': 'gogakal'}
                 )
 
     def test_three(self): 
@@ -160,7 +161,7 @@ class Test_tasker_add(unittest.TestCase):
                         test_connection,
                         {}
                         ),
-                    {'ronyal': 0, 'iskal': 0, 'is kal': 0}
+                    {'ronyal': '0', 'iskal': '0', 'is kal': '0'}
                     )
             tasker.tasker_add(test_cursor, test_connection,
                     {'beginning': 'tasker', 
@@ -174,7 +175,10 @@ class Test_tasker_add(unittest.TestCase):
                         test_connection,
                         {}
                         ),
-                    {'ronyal': 0, 'iskal': 1, 'is kal': 1, 'mnoga': 1}
+                    {'ronyal': '0', 
+                     'iskal': '1', 
+                     'is kal': '1', 
+                     'mnoga': '1'}
                     )
 
     def test_four(self):
@@ -681,7 +685,10 @@ class Test_tasker_get(unittest.TestCase):
                      'note': '', 
                      'tags': []}
                     ), 
-                {1: 'gogakal', 2: 'kak je tak', 3: 'vesma kal', 4: 'pichal'}
+                {'1': 'gogakal', 
+                 '2': 'kak je tak', 
+                 '3': 'vesma kal', 
+                 '4': 'pichal'}
                 )
     
     def test_two(self):
@@ -694,7 +701,8 @@ class Test_tasker_get(unittest.TestCase):
                      'note': '', 
                      'tags': ['ronyal', 'is kal']}
                     ), 
-                {1: 'gogakal', 3: 'vesma kal'}
+                {'1': 'gogakal', 
+                 '3': 'vesma kal'}
                 )
         
     def test_three(self):
@@ -746,7 +754,7 @@ class Test_tasker_tags(unittest.TestCase):
                      'note': '', 
                      'tags': []}, 
                     ),
-                {'ronyal': 1, 'iskal': 2, 'is kal': 1, 'o kale': 1}
+                {'ronyal': '1', 'iskal': '2', 'is kal': '1', 'o kale': '1'}
                 )
 
 
@@ -796,9 +804,19 @@ class Test_tasker_rm(unittest.TestCase):
                      'note': '', 
                      'tags': ['iskal']}
                     ), 
-                {2: 'kak je tak'}
+                {'2': 'kak je tak'}
                 )
 
+    def test_two(self):
+        tasker.tasker_rm(
+                test_cursor,
+                test_connection,
+                {'beginning': 'tasker',
+                 'command': 'tasker_rm',
+                 'note': '',
+                 'tags': [],
+                 'IDs':[10]}
+                 )
 
 class Test_return_IDs(unittest.TestCase):
     # tests for function return_IDs() in tasker.py
@@ -972,50 +990,33 @@ class Test_initial_check_tasker_ch(unittest.TestCase):
                  'note': 'gogakal', 
                  'tags': ['ronyal', 'iskal']}
                 )
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'vesma', 
+                 'tags': ['ronyal', 'iskal', 'is kal']}
+                )
 
     def tearDown(self):
         tasker.drop_tables(test_cursor, test_connection)
 
     def test_one(self):
-        self.assertFalse(
-                tasker.initial_check_tasker_ch(
-                    test_cursor,
-                    test_connection,
-                    {'beginning': 'tasker', 
-                     'command': 'ch', 
-                     'note': 'goga',
-                     'extra note': 'kal',
-                     'IDs': [1]}
-                    )
-                )
-
-    def test_two(self):
-        self.assertFalse(
-                tasker.initial_check_tasker_ch(
-                    test_cursor,
-                    test_connection,
-                    {'beginning': 'tasker', 
-                     'command': 'ch', 
-                     'note': 'goga',
-                     'extra note': ''}
-                    )
-                )
-
-    def test_three(self):
+        # case: ID is given, note is in base, hashtag is given
         self.assertTrue(
                 tasker.initial_check_tasker_ch(
                     test_cursor,
                     test_connection,
                     {'beginning': 'tasker', 
                      'command': 'ch', 
-                     'note': '',
-                     'hashtag': 1,
+                     'note': 'goga',
                      'extra note': 'kal',
+                     'hashtag': 1,
                      'IDs': [1]}
                     )
                 )
 
-    def test_four(self):
+    def test_two(self):
+        # case: no ID, no note, no hashtag
         self.assertFalse(
                 tasker.initial_check_tasker_ch(
                     test_cursor,
@@ -1023,12 +1024,126 @@ class Test_initial_check_tasker_ch(unittest.TestCase):
                     {'beginning': 'tasker', 
                      'command': 'ch', 
                      'note': '',
-                     'hashtag': 1,
+                     'extra note': ''}
+                    )
+                )
+
+    def test_three(self):
+        # case: ID is given, no note, no hashtag
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': '',
                      'extra note': 'kal',
                      'IDs': [35]}
                     )
                 )
 
+    def test_four(self):
+        # case: no ID, hashtag is given
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'hashtag': 1,
+                     'extra note': 'kal',
+                     'IDs': []}
+                    )
+                )
+
+    def test_five(self):
+        # case: ID is given, note in base, no hashtag
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'extra note': 'kal',
+                     'IDs': [1]}
+                    )
+                )
+
+    def test_six(self):
+        # case: ID is given, no note, hashtag is given
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'hashtag': 0,
+                     'extra note': 'kal',
+                     'IDs': [35]}
+                    )
+                )
+        
+    def test_seven(self):
+        # case: many IDs, many notes, hashtag is given
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'hashtag': 0,
+                     'extra note': 'kal',
+                     'IDs': [1, 2]}
+                    )
+                )
+
+    def test_eight(self):
+        # case: many IDs, no notes, hashtag is given
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'hashtag': 0,
+                     'extra note': 'kal',
+                     'IDs': [35, 36]}
+                    )
+                )        
+
+    def test_nine(self):
+        # case: many IDs, many notes, no hashtag
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'extra note': 'kal',
+                     'IDs': [1, 2]}
+                    )
+                )
+
+    def test_ten(self):
+        # case: many IDs, no notes, no hashtag
+        self.assertFalse(
+                tasker.initial_check_tasker_ch(
+                    test_cursor,
+                    test_connection,
+                    {'beginning': 'tasker', 
+                     'command': 'ch', 
+                     'note': 'goga',
+                     'extra note': 'kal',
+                     'IDs': [35, 36]}
+                    )
+                )        
+        
 class Test_tasker_ch(unittest.TestCase):
     # tests for function tasker_ch() in tasker.py
 
@@ -1064,7 +1179,7 @@ class Test_tasker_ch(unittest.TestCase):
                      'note': '', 
                      'tags': []}
                     ), 
-                {1: 'gogakal', 2: 'kak je tak'}
+                {'1': 'gogakal', '2': 'kak je tak'}
                 )        
         tasker.tasker_ch(
                 test_cursor, 
@@ -1086,7 +1201,7 @@ class Test_tasker_ch(unittest.TestCase):
                      'note': '', 
                      'tags': []}
                     ), 
-                {1: 'kal', 2: 'kak je tak'}
+                {'1': 'kal', '2': 'kak je tak'}
                 )
         self.assertEqual(
                 tasker.tasker_get(
@@ -1097,7 +1212,7 @@ class Test_tasker_ch(unittest.TestCase):
                      'note': '', 
                      'tags': []}
                     ), 
-                {1: 'kal', 2: 'kak je tak'}
+                {'1': 'kal', '2': 'kak je tak'}
                 )
 
     def test_two(self):
@@ -1150,7 +1265,7 @@ class Test_add_tags_to_note(unittest.TestCase):
                      'note': '', 
                      'tags': []}, 
                     ),
-                {'ronyal': 1, 'iskal': 1, 'o kale': 2, 'bol': 1}
+                {'ronyal': '1', 'iskal': '1', 'o kale': '2', 'bol': '1'}
                 )
 
 class Test_delete_tags_from_note(unittest.TestCase):
@@ -1181,7 +1296,7 @@ class Test_delete_tags_from_note(unittest.TestCase):
                             test_connection, 
                             {}
                             ),
-                {'ronyal': 2, 'kal': 1, 'o kale': 1, 'iskal': 1}
+                {'ronyal': '2', 'kal': '1', 'o kale': '1', 'iskal': '1'}
                 ) 
         tasker.delete_tags_from_note(
                 test_cursor, 
@@ -1195,7 +1310,7 @@ class Test_delete_tags_from_note(unittest.TestCase):
                             test_connection, 
                             {}
                             ),
-                {'ronyal': 2, 'kal': 1, 'o kale': 1, 'iskal': 0}
+                {'ronyal': '2', 'kal': '1', 'o kale': '1', 'iskal': '0'}
                 )
 
 class Test_add_tags(unittest.TestCase):
@@ -1226,7 +1341,7 @@ class Test_add_tags(unittest.TestCase):
                             test_connection, 
                             {}
                             ),
-                {'ronyal': 1, 'iskal': 1, 'o kale': 1}
+                {'ronyal': '1', 'iskal': '1', 'o kale': '1'}
                 )
         tasker.add_tags(
                 test_cursor, 
@@ -1239,10 +1354,114 @@ class Test_add_tags(unittest.TestCase):
                             test_connection, 
                             {}
                             ),
-                {'ronyal': 1, 'iskal': 1, 'o kale': 1, 'foo': 0}
+                {'ronyal': '1', 'iskal': '1', 'o kale': '1', 'foo': '0'}
                 )
 
 
+class Test_last_record_id_notes(unittest.TestCase):
+    # tests for function last_record_id_notes() in tasker.py
+
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        # no notes
+        self.assertEqual(
+                tasker.last_record_id_notes(test_cursor, test_connection),
+                None
+                )
+
+    def test_two(self):
+        # one note
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal']}
+                )
+        self.assertEqual(
+                tasker.last_record_id_notes(test_cursor, test_connection),
+                1
+                )
+
+    def test_three(self):
+        # many notes
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal']}
+                )
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak', 
+                 'tags': ['o kale']}
+                )
+        self.assertEqual(
+                tasker.last_record_id_notes(test_cursor, test_connection),
+                2
+                )
+
+class Test_chief_function(unittest.TestCase):
+    # tests for function chief_function() in tasker.py
+
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        # test for the situation when command_check_dictionary() returns
+        # false
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, test_connection, 'tasker add'),
+                None
+                )
+    
+    def test_two(self):
+        # test for command add
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, 
+                    test_connection, 
+                    'tasker add gogakal # kal'),
+                None
+                )
+
+    def test_three(self):
+        # test for command remove
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, 
+                    test_connection, 
+                    'tasker rm 1'),
+                None
+                )
+
+    def test_four(self):
+        # test for command remove
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, 
+                    test_connection, 
+                    'tasker ch 1 gogakal'),
+                None
+                )
+
+    def test_five(self):
+        # test for command quit
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, test_connection, 'tasker export'),
+                True
+                )
+        
 
 # MAIN CYCLE
 if __name__ == '__main__':
