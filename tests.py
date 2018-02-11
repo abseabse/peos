@@ -1,6 +1,6 @@
-# Version: 23
-# Date: 22.1.18
-# Time: 22:09 GMT+5
+# Version: 24
+# Date: 11.02.18
+# Time: 11:28 GMT+5
 
 # IMPORTS
 import unittest
@@ -1261,6 +1261,53 @@ class Test_add_tags(unittest.TestCase):
                 )
 
 
+class Test_last_record_id_notes(unittest.TestCase):
+    # tests for function last_record_id_notes() in tasker.py
+
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        # no notes
+        self.assertEqual(
+                tasker.last_record_id_notes(test_cursor, test_connection),
+                None
+                )
+
+    def test_two(self):
+        # one note
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal']}
+                )
+        self.assertEqual(
+                tasker.last_record_id_notes(test_cursor, test_connection),
+                1
+                )
+
+    def test_three(self):
+        # many notes
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'gogakal', 
+                 'tags': ['ronyal', 'iskal']}
+                )
+        tasker.tasker_add(test_cursor, test_connection,
+                {'beginning': 'tasker', 
+                 'command': 'add', 
+                 'note': 'kak je tak', 
+                 'tags': ['o kale']}
+                )
+        self.assertEqual(
+                tasker.last_record_id_notes(test_cursor, test_connection),
+                2
+                )
 
 # MAIN CYCLE
 if __name__ == '__main__':

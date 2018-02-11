@@ -1,6 +1,6 @@
-# Version: 57
+# Version: 58
 # Date: 11.02.18
-# Time: 11:14 GMT+5
+# Time: 11:28 GMT+5
 
 
 # IMPORTS
@@ -416,7 +416,6 @@ def command_check_dictionary(input_dictionary):
 def last_record_notes(cursor, connection):
     # an auxiliary function that returns the last record from table 
     # notes. Used indirectly in tasker_add().
-    #TODO write tests, see issue 23
     resulting_last_record = cursor.execute("""select * from notes 
             where ROWID = (SELECT MAX(ROWID) from notes)""")
     return(resulting_last_record)
