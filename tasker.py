@@ -1,6 +1,6 @@
-# Version: 58
+# Version: 59
 # Date: 11.02.18
-# Time: 11:28 GMT+5
+# Time: 14:59 GMT+5
 
 
 # IMPORTS
@@ -98,8 +98,6 @@ def tasker_get(cursor, connection, input_dictionary):
     if (input_dictionary['tags'] == []) and (list_of_notes_ID == []):
         result = cursor.execute('''SELECT * FROM notes''')
     else:
-        # TODO four lines under this comment is somewhat messy. 
-        # Perhaps, need to rewrite, see issue #47
         a = ""
         for item in list_of_notes_ID:
             a = a + str(item) + ", "
@@ -691,8 +689,12 @@ if __name__ == '__main__':
                             0, 
                             str('press any key to continue...'))
                         stdscr.getkey()
-                        stdscr.clear()
-                        stdscr.refresh()
+                        # The addstr under deletes the 'press any key ...' 
+                        # on the screen
+                        stdscr.addstr(
+                            current_cursor_position_y+start_line_for_win+1, 
+                            0, 
+                            str('                            '))
                         first_win.clear()
                         second_win.clear()
                         current_cursor_position_y = 0
