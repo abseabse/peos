@@ -632,8 +632,19 @@ if __name__ == '__main__':
     while quit == 1:
         curses.curs_set(1)
         # Step 0: Requesting input
-        stdscr.clear()
+        # TODO that's definetely ugly. Rewrite to use a special command
+        # window, see issue #76.
+        stdscr.move(1,0)
+        stdscr.clrtoeol()
+        stdscr.move(2,0)
+        stdscr.clrtoeol()
+        stdscr.move(3,0)
+        stdscr.clrtoeol()
+        stdscr.move(4,0)
+        stdscr.clrtoeol()
+        stdscr.move(0,0)
         current_cursor_position_y = 0
+        stdscr.refresh()
         stdscr.addstr(0, 0, 'Enter command:')
         byte_user_command = stdscr.getstr(1, 0)
         user_command = byte_user_command.decode()
@@ -690,7 +701,7 @@ if __name__ == '__main__':
                             str('press any key to continue...'))
                         stdscr.getkey()
                         # The addstr under deletes the 'press any key ...' 
-                        # on the screen
+                        # on the screen. Ugly.
                         stdscr.addstr(
                             current_cursor_position_y+start_line_for_win+1, 
                             0, 
