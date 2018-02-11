@@ -1,6 +1,6 @@
-# Version: 54
-# Date: 22.1.18
-# Time: 22:09 GMT+5
+# Version: 55
+# Date: 11.02.18
+# Time: 10:43 GMT+5
 
 
 # IMPORTS
@@ -45,13 +45,12 @@ def chief_function(cursor, connection, input_string):
     #TODO think about adding tests, see issue #32
     input_dictionary = convert_input_to_dictionary(input_string)
     if command_check_dictionary(input_dictionary) == False:
-        stdscr.addstr('Error: Wrong input string. To quit type: tasker quit')
-        curses.curs_set(0)
-        stdscr.getch()
+        return None
     else:
         command = input_dictionary['command']
         if command == 'quit':
             tasker_quit(input_dictionary)
+            return True
         if command == 'add':
             tasker_add(cursor, connection, input_dictionary)
         if command == 'get':
@@ -588,7 +587,19 @@ def initial_input_check(input_string):
     else:
         return False
 
-       
+def slicing(string_to_slice, restriction):
+    # auxiliary function to print dictionaries. 
+    # Used in the main cycle directly.
+    # this function requires the global paremeter 'strings'
+    # to be executed properly
+    if len(string_to_slice) < restriction:
+        if string_to_slice != '':
+            strings.append(string_to_slice)
+    else:
+        strings.append(string_to_slice[:restriction])
+        slicing(string_to_slice[restriction:], restriction)
+
+
 # auxiliary functions for test purpose only (used only in doctests and
 # unittests)
 def clear_all(cursor, connection):
@@ -629,26 +640,116 @@ if __name__ == '__main__':
     c.execute('''pragma foreign_keys = on''')
     create_tables(c, conn)
     quit = 1
+    current_cursor_position_y = 0
+    max_cursor_position_y = 24
     stdscr = curses.initscr()
     while quit == 1:
         curses.curs_set(1)
-        stdscr.erase()
-        stdscr.addstr('Enter command:')
-        stdscr.refresh()
+        # Step 0: Requesting input
+        stdscr.clear()
+        current_cursor_position_y = 0
+        stdscr.addstr(0, 0, 'Enter command:')
         byte_user_command = stdscr.getstr(1, 0)
         user_command = byte_user_command.decode()
+        # TODO Write the function that updates current cursor position
+        # (user input can be rather long) instead of just incrementing it
+        # by 2.
+        current_cursor_position_y += 2
         if initial_input_check(user_command) == True:
             result = chief_function(c, conn, user_command)
             if result == None: # branch for functions that returns None,
                                # see chief_function() for details.
-                pass
-            elif type(result) == type({}):
-                for number, item in enumerate(result):
-                    string_to_print = item+": " + result[item]
-                    stdscr.addstr(number+2, 0, string_to_print)
-                    curses.curs_set(0)
+                stdscr.addstr(current_cursor_position_y, 0,
+                        'Wrong input. To quit type: tasker quit')
                 stdscr.refresh()
                 stdscr.getkey()
+            elif type(result) == type({}):
+                # branch for functions that return dictionaries.
+                # Step 0: initializing variables and windows used for 
+                # output.
+                stdscr.refresh()
+                lines_max = 20
+                start_line_for_win = 5 
+                first_win = curses.newwin(
+                        lines_max, 20, 
+                        start_line_for_win, 0)
+                second_win = curses.newwin(
+                        lines_max, 20, 
+                        start_line_for_win, 21)
+                # Legend:
+                # 1. Number of lines
+                # 2. Number of columns (width)
+                # 3. Begin y
+                # 4. Begin x
+                current_cursor_position_y = 0
+                for item in result:
+                    # Step 1: define number of lines in output
+                    strings = []
+                    slicing(item, 20)
+                    lines_counter = len(strings)
+                    strings = []
+                    slicing(result[item], 20)
+                    if len(strings) > lines_counter:
+                        lines_counter = len(strings)
+                    # Step 1.0: Check if allowed number of strings reached
+                    #           and refresh the screen accordingly
+                    if (current_cursor_position_y + 
+                       lines_counter) >= lines_max-1:
+                        stdscr.refresh()
+                        first_win.refresh()
+                        second_win.refresh()
+                        stdscr.addstr(
+                            current_cursor_position_y+start_line_for_win+1, 
+                            0, 
+                            str('press any key to continue...'))
+                        stdscr.getkey()
+                        stdscr.clear()
+                        stdscr.refresh()
+                        first_win.clear()
+                        second_win.clear()
+                        current_cursor_position_y = 0
+                    # Step 2: adding strings to the first column
+                    strings = []
+                    slicing(item, 20)
+                    current_line_number = 0
+                    for resulting_item in strings:
+                        first_win.addstr(
+                            current_cursor_position_y+current_line_number, 0,
+                            resulting_item)
+                        current_line_number += 1
+                    # Step 2.0: adding empty strings if number of 
+                    #           added lines is smaller than the maximum 
+                    #           lines number
+                    # TODO that piece of code is a bit ugly, 
+                    # maybe, rewrite it?
+                    while current_line_number < lines_counter:
+                        first_win.addstr(' '*20)        
+                        current_line_number += 1
+                    # Step 3: adding strings to the second column
+                    strings = []
+                    slicing(result[item], 20)
+                    current_line_number = 0
+                    for resulting_item in strings:
+                        second_win.addstr(
+                            current_cursor_position_y+current_line_number, 
+                            0, 
+                            resulting_item)
+                        current_line_number += 1
+                    # Step 3.0: adding empty strings if 
+                    #           number of added lines is smaller
+                    #           than the maximum lines number
+                    while current_line_number < lines_counter:
+                        second_win.addstr(' '*20)
+                        current_line_number += 1
+                    # Step 4: updating counter of initial position y 
+                    #         for the next value not to override current
+                    current_cursor_position_y += lines_counter
+                first_win.refresh()
+                second_win.refresh()
+                curses.curs_set(0)
+                stdscr.refresh()
+                stdscr.getkey()
+
             else:
                 pass    # TODO the place for future list-of-the-lists code
         else:
