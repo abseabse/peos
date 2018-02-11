@@ -1,6 +1,6 @@
-# Version: 61
+# Version: 62
 # Date: 11.02.18
-# Time: 18:19 GMT+5
+# Time: 23:10 GMT+5
 
 
 # IMPORTS
@@ -41,8 +41,12 @@ def create_tables(cursor, connection):
 def chief_function(cursor, connection, input_string):
     # service function that parses user input 
     # and launches as appropriate command.
-    # Used directly in main cycle.
-    #TODO think about adding tests, see issue #32
+    # Used directly in the main cycle.
+    # tests are in tests.py
+    # TODO not all tests can be completed: for commands tasker_get() and
+    # tasker_tags() I use curses and stdscr is not initialized in tests.py
+    # so these tests are omitted. Don't know how to implement them, will
+    # do later
     input_dictionary = convert_input_to_dictionary(input_string)
     if command_check_dictionary(input_dictionary) == False:
         return None

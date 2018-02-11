@@ -1406,6 +1406,63 @@ class Test_last_record_id_notes(unittest.TestCase):
                 2
                 )
 
+class Test_chief_function(unittest.TestCase):
+    # tests for function chief_function() in tasker.py
+
+    def setUp(self):
+        tasker.create_tables(test_cursor, test_connection)
+
+    def tearDown(self):
+        tasker.drop_tables(test_cursor, test_connection)
+
+    def test_one(self):
+        # test for the situation when command_check_dictionary() returns
+        # false
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, test_connection, 'tasker add'),
+                None
+                )
+    
+    def test_two(self):
+        # test for command add
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, 
+                    test_connection, 
+                    'tasker add gogakal # kal'),
+                None
+                )
+
+    def test_three(self):
+        # test for command remove
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, 
+                    test_connection, 
+                    'tasker rm 1'),
+                None
+                )
+
+    def test_four(self):
+        # test for command remove
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, 
+                    test_connection, 
+                    'tasker ch 1 gogakal'),
+                None
+                )
+
+    def test_five(self):
+        # test for command quit
+        self.assertEqual(
+                tasker.chief_function(
+                    test_cursor, test_connection, 'tasker export'),
+                True
+                )
+        
+
 # MAIN CYCLE
 if __name__ == '__main__':
     unittest.main()
