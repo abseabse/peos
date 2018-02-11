@@ -1,6 +1,6 @@
-# Version: 60
+# Version: 61
 # Date: 11.02.18
-# Time: 17:43 GMT+5
+# Time: 18:19 GMT+5
 
 
 # IMPORTS
@@ -13,9 +13,9 @@ import curses
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then doctest blocks will be executed, 
                 # otherwise not
-command_list = ['add', 'quit', 'get', 'tags', 'rm', 'ch']
+command_list = ['add', 'quit', 'get', 'tags', 'rm', 'ch', 'export']
     # list of commands available, used in command_check_dictionary()
-
+export_file = 'notes.txt' # filename to export notes
 
 # FUNCTIONS
 # table functions
@@ -61,6 +61,9 @@ def chief_function(cursor, connection, input_string):
             tasker_rm(cursor, connection, input_dictionary)
         if command == 'ch':
             tasker_ch(cursor, connection, input_dictionary)
+        if command == 'export':
+            tasker_export(cursor, connection)
+            return True
 
 def tasker_add(cursor, connection, input_dictionary):
     # function that adds new note.
@@ -212,6 +215,15 @@ def tasker_ch(cursor, connection, input_dictionary):
                 pass
         except Warning:
             print('Error in tasker_ch')
+
+def tasker_export(cursor, connection):
+    # function that export all the notes to txt.file
+    # TODO write tests for tasker_export(), see issue #77
+    notes_to_export = tasker_get(cursor, connection, {'tags': []})
+    with open (export_file, 'w') as notes_export_file:
+        for item in notes_to_export:
+            string_to_write = item + ' ' + notes_to_export[item] + '\n'
+            notes_export_file.write(string_to_write)
 
 # AUXILIARY FUNCTIONS
 def add_tags(cursor, connection, tags):
@@ -625,6 +637,7 @@ if __name__ == '__main__':
     if testmode == 1:
         import doctest
         doctest.testmod()
+        pause = input('press any key to leave testmod')
     
     current_cursor_position_y = 0
     max_cursor_position_y = 24
