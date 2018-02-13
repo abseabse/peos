@@ -1,6 +1,6 @@
-# Version: 62
-# Date: 11.02.18
-# Time: 23:10 GMT+5
+# Version: 63
+# Date: 13.02.18
+# Time: 21:24 GMT+5
 
 
 # IMPORTS
@@ -138,9 +138,9 @@ def tasker_quit(input_dictionary):
     if ask == 'y':
         sys.exit()
     else:
-        stdscr.addstr('Are you sure to quit? [y] [n]')
+        command_win.addstr(2,0, 'Are you sure to quit? [y] [n]')
         current_cursor_position = curses.getsyx()
-        user_command = stdscr.getstr(current_cursor_position[0]+1, 0)
+        user_command = command_win.getstr(current_cursor_position[0]+1, 0)
         if user_command.decode() == 'y':
             curses.endwin()
             sys.exit()
@@ -633,52 +633,41 @@ if __name__ == '__main__':
     c.execute('''pragma foreign_keys = on''')
     create_tables(c, conn)
     quit = 1
-    
+    current_cursor_position_y = 0
+    max_cursor_position_y = 24
+    stdscr = curses.initscr()
+    command_win = curses.newwin(
+                        5, 80, 
+                        0, 0)
     # TEST CYCLE
     if testmode == 1:
         import doctest
         doctest.testmod()
-        pause = input('press any key to leave testmod')
+        command_win.addstr('press any key to leave testmod')
+        command_win.getkey()
     
-    current_cursor_position_y = 0
-    max_cursor_position_y = 24
-    stdscr = curses.initscr()
+
     while quit == 1:
         curses.curs_set(1)
-        # Step 0: Requesting input
-        # TODO that's definetely ugly. Rewrite to use a special command
-        # window, see issue #76.
-        stdscr.move(1,0)
-        stdscr.clrtoeol()
-        stdscr.move(2,0)
-        stdscr.clrtoeol()
-        stdscr.move(3,0)
-        stdscr.clrtoeol()
-        stdscr.move(4,0)
-        stdscr.clrtoeol()
-        stdscr.move(0,0)
-        current_cursor_position_y = 0
-        stdscr.refresh()
-        stdscr.addstr(0, 0, 'Enter command:')
-        byte_user_command = stdscr.getstr(1, 0)
+        # Step 0: Requesting input 
+        command_win.clear()
+        command_win.addstr(0, 0, 'Enter command:')
+        byte_user_command = command_win.getstr(1, 0)
         user_command = byte_user_command.decode()
-        # TODO Write the function that updates current cursor position
-        # (user input can be rather long) instead of just incrementing it
-        # by 2, see issue #76.
         current_cursor_position_y += 2
         if initial_input_check(user_command) == True:
             result = chief_function(c, conn, user_command)
             if result == None: # branch for functions that returns None,
                                # see chief_function() for details.
-                stdscr.addstr(current_cursor_position_y, 0,
+                command_win.addstr(3, 0,
                         'Wrong input. To quit type: tasker quit')
-                stdscr.refresh()
-                stdscr.getkey()
+                command_win.refresh()
+                command_win.getkey()
             elif type(result) == type({}):
                 # branch for functions that return dictionaries.
                 # Step 0: initializing variables and windows used for 
                 # output.
-                stdscr.refresh()
+                # stdscr.refresh()
                 lines_max = 20
                 start_line_for_win = 5 
                 first_win = curses.newwin(
@@ -706,18 +695,17 @@ if __name__ == '__main__':
                     #           and refresh the screen accordingly
                     if (current_cursor_position_y + 
                        lines_counter) >= lines_max-1:
-                        stdscr.refresh()
                         first_win.refresh()
                         second_win.refresh()
-                        stdscr.addstr(
-                            current_cursor_position_y+start_line_for_win+1, 
+                        command_win.addstr(
+                            3, 
                             0, 
                             str('press any key to continue...'))
-                        stdscr.getkey()
+                        command_win.getkey()
                         # The addstr under deletes the 'press any key ...' 
                         # on the screen. Ugly.
-                        stdscr.addstr(
-                            current_cursor_position_y+start_line_for_win+1, 
+                        command_win.addstr(
+                            3, 
                             0, 
                             str('                            '))
                         first_win.clear()
@@ -762,13 +750,13 @@ if __name__ == '__main__':
                 first_win.refresh()
                 second_win.refresh()
                 curses.curs_set(0)
-                stdscr.refresh()
-                stdscr.getkey()
+                command_win.refresh()
+                command_win.getkey()
 
             else:
                 pass    # TODO the place for future list-of-the-lists code
                         # see issue #84.
         else:
-            current_cursor_position = curses.getsyx()
-            stdscr.addstr(current_cursor_position[0]+1, 0, 'gogakal')
-            stdscr.refresh()
+            command_win.addstr(3, 0, 
+                    'Wrong input. To quit type: tasker quit')
+            command_win.getkey()
