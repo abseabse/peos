@@ -46,7 +46,7 @@ def chief_function(cursor, connection, input_string):
     # TODO not all tests can be completed: for commands tasker_get() and
     # tasker_tags() I use curses and stdscr is not initialized in tests.py
     # so these tests are omitted. Don't know how to implement them, will
-    # do later
+    # do later. See issue #81
     input_dictionary = convert_input_to_dictionary(input_string)
     if command_check_dictionary(input_dictionary) == False:
         return None
@@ -113,7 +113,6 @@ def tasker_get(cursor, connection, input_dictionary):
                 '''SELECT * FROM notes WHERE ID_note IN 
                 ({list_to_apply})'''.format(list_to_apply=a)
                 )
-    # TODO remove mess in the function's end, see issue #44
     result_dictionary = {}
     for item in result:
         result_dictionary[str(item[0])] = item[1]
@@ -150,7 +149,6 @@ def tasker_tags(cursor, connection, input_dictionary):
     # function that returns a list of all the tags 
     # with notes quanitity accordingly.
     # tests are in tests.py
-    # TODO remove mess in the function's end, see issue #44
     list_of_used_tags = return_used_tag_dictionary(cursor, connection)
     dictionary_of_tags = {}
     for key, value in list_of_used_tags.items():
@@ -311,8 +309,6 @@ def initial_check_tasker_ch(cursor, connection, input_dictionary):
     # auxiliary function for tasker_ch() that checks if all the 
     # necessary parameters are entered. Used directly in tasker_ch().
     # tests are in tests.py
-    # TODO try to write complete set of tests according to The Art
-    # of Software Testing, see issue #57
     # Check, that ID is entered and its exactly one value (not many)
     if 'IDs' in input_dictionary:
         if len(input_dictionary['IDs']) != 1:
@@ -342,7 +338,8 @@ def return_tags_intersection(cursor, connection, tag_list):
             return []
         elif common_list == []:
             # there might be a problem: changes in notes_list can affect
-            # common_list. TODO that thing should be tested.
+            # common_list. TODO that thing should be tested, write additional
+            # tests, see issue #82
             common_list = notes_list
         else:
             common_list = list(set(common_list)&set(notes_list))
@@ -667,7 +664,7 @@ if __name__ == '__main__':
         user_command = byte_user_command.decode()
         # TODO Write the function that updates current cursor position
         # (user input can be rather long) instead of just incrementing it
-        # by 2.
+        # by 2, see issue #76.
         current_cursor_position_y += 2
         if initial_input_check(user_command) == True:
             result = chief_function(c, conn, user_command)
@@ -739,7 +736,7 @@ if __name__ == '__main__':
                     #           added lines is smaller than the maximum 
                     #           lines number
                     # TODO that piece of code is a bit ugly, 
-                    # maybe, rewrite it?
+                    # maybe, rewrite it? See issue #83
                     while current_line_number < lines_counter:
                         first_win.addstr(' '*20)        
                         current_line_number += 1
@@ -770,6 +767,7 @@ if __name__ == '__main__':
 
             else:
                 pass    # TODO the place for future list-of-the-lists code
+                        # see issue #84.
         else:
             current_cursor_position = curses.getsyx()
             stdscr.addstr(current_cursor_position[0]+1, 0, 'gogakal')
