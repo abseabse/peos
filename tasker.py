@@ -1,6 +1,6 @@
-# Version: 64
+# Version: 65
 # Date: 14.02.18
-# Time: 21:05 GMT+5
+# Time: 21:17 GMT+5
 
 
 # IMPORTS
@@ -74,7 +74,7 @@ def tasker_add(cursor, connection, input_dictionary):
     # tests are in tests.py
     if tasker_add_check(input_dictionary) is False:
         print('Not enough parameters are entered')
-        return('Error')
+        return 'Error'
     else:
         try:
             if input_dictionary['note'] != '':
@@ -94,7 +94,7 @@ def tasker_add(cursor, connection, input_dictionary):
             else:
                 add_tags(cursor, connection, input_dictionary['tags'])
         except Warning:
-            return('Error in tasker_add()')
+            return 'Error in tasker_add()'
 
 def tasker_get(cursor, connection, input_dictionary):
     # function that returns list of notes with tags from input.
@@ -387,7 +387,7 @@ def return_used_tag_dictionary(cursor, connection):
     resulting_dictionary = {}
     for item, value in list_of_tags:
         resulting_dictionary[item] = value
-    return(resulting_dictionary)
+    return resulting_dictionary
 
 def return_tag_id(cursor, connection, tag):
     # an auxiliary function that returns tag ID for tag specified.
@@ -403,41 +403,42 @@ def command_check_dictionary(input_dictionary):
     # tests are in tests.py
     # The first step: check if the type of the input is a dictionary
     if type(input_dictionary) != type({}):
-        return(False)
+        return False
     # The second step: check if the input contains all necessary elements:
     #   - beginning
     #   - command
     #   - note
     #   - tags
     if 'beginning' not in input_dictionary:
-        return(False)
+        return False
     if 'command' not in input_dictionary:
-        return(False)
+        return False
     if 'note' not in input_dictionary:
-        return(False)
+        return False
     if 'tags' not in input_dictionary:
-        return(False)
+        return False
     # The third step: check if input contains specific beginning 'tasker'
     if input_dictionary['beginning'] != 'tasker':
-        return(False)
+        return False
     # the fourth step: check if input contains actual command
     if input_dictionary['command'] not in command_list:
-        return(False)
-    return(True)
+        return False
+    return True
 
 def last_record_notes(cursor, connection):
     # an auxiliary function that returns the last record from table 
     # notes. Used indirectly in tasker_add().
-    resulting_last_record = cursor.execute("""select * from notes 
-            where ROWID = (SELECT MAX(ROWID) from notes)""")
-    return(resulting_last_record)
+    resulting_last_record = cursor.execute(
+            """SELECT * FROM notes ORDER BY ROWID DESC LIMIT 1""") 
+    return resulting_last_record
 
 def last_record_id_notes(cursor, connection):
     # an auxiliary function that returns the last record from table 
     # notes. Used directly in tasker_add().
+    # tests are in tests.py
     last_record_cursor = last_record_notes(cursor, connection)
     for item in last_record_cursor:
-        return(item[0])
+        return item[0]
 
 def return_tags(text):
     # an auxiliary function, that returns list of tags from string. 
@@ -451,7 +452,7 @@ def return_tags(text):
         else:
             tag_cleared_from_hashtags = re.sub('[#]', '', tag)
             return_list.append(tag_cleared_from_hashtags.strip())
-    return(return_list)
+    return return_list
 
 def no_hash_check(input_string):
     # an auxiliary function, that determines if there is at least one 
@@ -515,7 +516,7 @@ def convert_input_to_dictionary(input_string):
     if no_hash_check(input_string) == False:
         resulting_dictionary['tags'] = return_tags(trailing_string)
         resulting_dictionary['hashtag'] = 1
-    return(resulting_dictionary)
+    return resulting_dictionary
 
 def return_IDs(input_string):
     # an auxiliary function that returns a list of ID's (notes or tags).
