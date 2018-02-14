@@ -1,6 +1,6 @@
-# Version: 63
-# Date: 13.02.18
-# Time: 21:24 GMT+5
+# Version: 64
+# Date: 14.02.18
+# Time: 21:05 GMT+5
 
 
 # IMPORTS
@@ -136,6 +136,7 @@ def tasker_quit(input_dictionary):
     # function to quit.
     ask = input_dictionary['note']
     if ask == 'y':
+        curses.endwin()
         sys.exit()
     else:
         command_win.addstr(2,0, 'Are you sure to quit? [y] [n]')
