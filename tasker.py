@@ -577,17 +577,17 @@ def initial_input_check(input_string):
     # is correct in overall.
     # Used directly in the main cycle.
     # tests are in tests.py
-    check1 = re.compile('''
-            (\w+\s*)+           # looking for at least one initial word;
+    # FIXME a bit luggy processing big words
+    check1 = re.compile(''' 
             [#]                 # looking for a hash symbol;
-            \s+                 # looking for at least one whitespace 
+            \s+?                # looking for at least one whitespace 
                                 # after hash symbol;
-            \w+                 # looking for at least one word after 
+            \w+?                # looking for at least one word after 
                                 # hash symbol (i.e. tag).
             ''', re.VERBOSE)
 
     check2 = re.compile('''
-            (\w+\s*)+           # looking for at least one initial word
+            (\w+?\s*?)+?        # looking for at least one initial word
             ''', re.VERBOSE)
     check1_result = check1.match(input_string)
     check2_result = check2.match(input_string)

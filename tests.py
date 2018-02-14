@@ -1,6 +1,6 @@
-# Version: 25
+# Version: 26
 # Date: 11.02.18
-# Time: 14:31 GMT+5
+# Time: 23:09 GMT+5
 
 # IMPORTS
 import unittest
@@ -107,6 +107,12 @@ class Test_initial_input_check(unittest.TestCase):
     def test_four(self):
         self.assertFalse(
                 tasker.initial_input_check('')
+                )
+    
+    # @unittest.skip('test')
+    def test_five(self):
+        self.assertTrue(
+                tasker.initial_input_check('tasker quit 1234567890123456')
                 )
 
 
@@ -551,7 +557,21 @@ class Test_convert_input_to_dictionary(unittest.TestCase):
                   'IDs': [2]
                   }
                  )
-
+    '''
+    def test_twelve(self):
+        self.assertEqual(
+                tasker.convert_input_to_dictionary(
+                    'tasker quit 1234567890123456'),
+                {'beginning': 'tasker', 
+                 'command': 'quit', 
+                 'note': '',
+                 'extra note': '',
+                 'hashtag': 0,
+                 'tags': [],
+                 'IDs': [1234567890123456]
+                 }
+                )
+    '''
 class Test_clear_all(unittest.TestCase):
     # tests for function clear_all() in tasker.py
 
@@ -856,7 +876,12 @@ class Test_return_IDs(unittest.TestCase):
                 tasker.return_IDs(' 1.1 , 2'),
                 [2]
                 )
-
+    
+    def test_six(self):
+        self.assertEqual(
+                tasker.return_IDs('1234567890123456'),
+                [1234567890123456]
+                )
 
 class Test_check_if_note_contains_only_IDs(unittest.TestCase):
     # tests for function check_if_note_contains_only_IDs() in tasker.py
@@ -902,6 +927,11 @@ class Test_check_if_note_contains_only_IDs(unittest.TestCase):
     def test_seven(self):
         self.assertFalse(
                 tasker.check_if_note_contains_only_IDs('1.1')
+                )
+
+    def test_eight(self):
+        self.assertTrue(
+                tasker.check_if_note_contains_only_IDs('1234567890123456')
                 )
 
 
@@ -1445,7 +1475,7 @@ class Test_chief_function(unittest.TestCase):
                 )
 
     def test_four(self):
-        # test for command remove
+        # test for command change
         self.assertEqual(
                 tasker.chief_function(
                     test_cursor, 
