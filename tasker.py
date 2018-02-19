@@ -726,10 +726,8 @@ if __name__ == '__main__':
                     # Step 2.0: adding empty strings if number of 
                     #           added lines is smaller than the maximum 
                     #           lines number
-                    # TODO that piece of code is a bit ugly, 
-                    # maybe, rewrite it? See issue #83
                     while current_line_number < lines_counter:
-                        first_win.addstr(' '*20)        
+                        first_win.addstr(current_line_number+1,0,' ')
                         current_line_number += 1
                     # Step 3: adding strings to the second column
                     strings = []
@@ -745,7 +743,7 @@ if __name__ == '__main__':
                     #           number of added lines is smaller
                     #           than the maximum lines number
                     while current_line_number < lines_counter:
-                        second_win.addstr(' '*20)
+                        first_win.addstr(current_line_number+1,0,' ')
                         current_line_number += 1
                     # Step 4: updating counter of initial position y 
                     #         for the next value not to override current
