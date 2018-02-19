@@ -1,4 +1,4 @@
-# Version: 66
+# Version: 67
 # Date: 19.02.18
 # Time: 19:48 GMT+5
 
@@ -332,6 +332,7 @@ def initial_check_tasker_ch(cursor, connection, input_dictionary):
 def return_tags_intersection(cursor, connection, tag_list):
     # an auxiliary function that returns list of notes 
     # (in form of notes IDs) with the tag list provided.
+    # used in tasker_get() directly.
     # tests are in tests.py
     common_list = []
     for tag in tag_list:
@@ -339,9 +340,6 @@ def return_tags_intersection(cursor, connection, tag_list):
         if notes_list == []:
             return []
         elif common_list == []:
-            # there might be a problem: changes in notes_list can affect
-            # common_list. TODO that thing should be tested, write additional
-            # tests, see issue #82
             common_list = notes_list
         else:
             common_list = list(set(common_list)&set(notes_list))
