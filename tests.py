@@ -1,6 +1,6 @@
-# Version: 26
-# Date: 11.02.18
-# Time: 23:09 GMT+5
+# Version: 27
+# Date: 19.02.18
+# Time: 19:48 GMT+5
 
 # IMPORTS
 import unittest
@@ -1450,7 +1450,7 @@ class Test_chief_function(unittest.TestCase):
         # false
         self.assertEqual(
                 tasker.chief_function(
-                    test_cursor, test_connection, 'tasker add'),
+                    test_cursor, test_connection, 'tasker adder'),
                 None
                 )
     
@@ -1461,7 +1461,7 @@ class Test_chief_function(unittest.TestCase):
                     test_cursor, 
                     test_connection, 
                     'tasker add gogakal # kal'),
-                None
+                True
                 )
 
     def test_three(self):

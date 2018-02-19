@@ -1,6 +1,6 @@
-# Version: 65
-# Date: 14.02.18
-# Time: 21:17 GMT+5
+# Version: 66
+# Date: 19.02.18
+# Time: 19:48 GMT+5
 
 
 # IMPORTS
@@ -57,6 +57,7 @@ def chief_function(cursor, connection, input_string):
             return True
         if command == 'add':
             tasker_add(cursor, connection, input_dictionary)
+            return True
         if command == 'get':
             return tasker_get(cursor, connection, input_dictionary)
         if command == 'tags':
@@ -662,7 +663,7 @@ if __name__ == '__main__':
             if result == None: # branch for functions that returns None,
                                # see chief_function() for details.
                 command_win.addstr(3, 0,
-                        'Wrong input. To quit type: tasker quit')
+                        'Wrong input. To quit type: tasker quit1')
                 command_win.refresh()
                 command_win.getkey()
             elif type(result) == type({}):
