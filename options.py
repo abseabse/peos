@@ -1,5 +1,9 @@
 # Options for tasker.py
 
+# Version: 1
+# Date: 20.02.18
+# Time: 23:39 GMT+5
+
 
 # GLOBAL VARIABLES
 testmode = 1    # if value == 1, then doctest blocks will 
