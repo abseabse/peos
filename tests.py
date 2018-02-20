@@ -7,7 +7,7 @@ import unittest
 import tasker
 import sqlite3
 import curses
-
+import options
 
 # CREATING MOCK DATABASE, CONNECTION AND CURSOR FOR TESTING PURPOSES
 test_connection = sqlite3.connect(":memory:")

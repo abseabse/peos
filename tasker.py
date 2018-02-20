@@ -1,6 +1,6 @@
-# Version: 67
-# Date: 19.02.18
-# Time: 19:48 GMT+5
+# Version: 68
+# Date: 20.02.18
+# Time: 23:39 GMT+5
 
 
 # IMPORTS
@@ -8,14 +8,15 @@ import sqlite3
 import sys
 import re
 import curses
+import options
 
 
 # GLOBAL VARIABLES
-testmode = 1    # if value == 1, then doctest blocks will be executed, 
-                # otherwise not
+testmode = options.testmode # if value == 1, then doctest blocks will 
+                            # be executed, otherwise not
 command_list = ['add', 'quit', 'get', 'tags', 'rm', 'ch', 'export']
     # list of commands available, used in command_check_dictionary()
-export_file = 'notes.txt' # filename to export notes
+export_file = options.export_file # filename to export notes
 
 # FUNCTIONS
 # table functions
@@ -635,10 +636,12 @@ if __name__ == '__main__':
     create_tables(c, conn)
     quit = 1
     current_cursor_position_y = 0
-    max_cursor_position_y = 24
+    max_cursor_position_y = options.max_cursor_position_y
+    max_cursor_position_x = options.max_cursor_position_x
+    command_win_lines = options.command_win_lines
     stdscr = curses.initscr()
     command_win = curses.newwin(
-                        5, 80, 
+                        command_win_lines, max_cursor_position_x, 
                         0, 0)
     # TEST CYCLE
     if testmode == 1:
@@ -660,7 +663,7 @@ if __name__ == '__main__':
             result = chief_function(c, conn, user_command)
             if result == None: # branch for functions that returns None,
                                # see chief_function() for details.
-                command_win.addstr(3, 0,
+                command_win.addstr(command_win_lines-2, 0,
                         'Wrong input. To quit type: tasker quit1')
                 command_win.refresh()
                 command_win.getkey()
@@ -669,14 +672,19 @@ if __name__ == '__main__':
                 # Step 0: initializing variables and windows used for 
                 # output.
                 # stdscr.refresh()
-                lines_max = 20
-                start_line_for_win = 5 
+                lines_max = options.first_second_win_lines
+                start_line_for_win = command_win_lines
+                first_win_width_x = options.first_win_width_x
+                second_win_width_x = options.second_win_width_x 
                 first_win = curses.newwin(
-                        lines_max, 20, 
+                        lines_max, 
+                        first_win_width_x, 
                         start_line_for_win, 0)
                 second_win = curses.newwin(
-                        lines_max, 20, 
-                        start_line_for_win, 21)
+                        lines_max, 
+                        second_win_width_x, 
+                        start_line_for_win, 
+                        first_win_width_x+1)
                 # Legend:
                 # 1. Number of lines
                 # 2. Number of columns (width)
@@ -686,10 +694,10 @@ if __name__ == '__main__':
                 for item in result:
                     # Step 1: define number of lines in output
                     strings = []
-                    slicing(item, 20)
+                    slicing(item, first_win_width_x)
                     lines_counter = len(strings)
                     strings = []
-                    slicing(result[item], 20)
+                    slicing(result[item], second_win_width_x)
                     if len(strings) > lines_counter:
                         lines_counter = len(strings)
                     # Step 1.0: Check if allowed number of strings reached
@@ -699,14 +707,14 @@ if __name__ == '__main__':
                         first_win.refresh()
                         second_win.refresh()
                         command_win.addstr(
-                            3, 
+                            command_win_lines-2, 
                             0, 
                             str('press any key to continue...'))
                         command_win.getkey()
                         # The addstr under deletes the 'press any key ...' 
                         # on the screen. Ugly.
                         command_win.addstr(
-                            3, 
+                            command_win_lines-2, 
                             0, 
                             str('                            '))
                         first_win.clear()
@@ -714,7 +722,7 @@ if __name__ == '__main__':
                         current_cursor_position_y = 0
                     # Step 2: adding strings to the first column
                     strings = []
-                    slicing(item, 20)
+                    slicing(item, first_win_width_x)
                     current_line_number = 0
                     for resulting_item in strings:
                         first_win.addstr(
@@ -729,7 +737,7 @@ if __name__ == '__main__':
                         current_line_number += 1
                     # Step 3: adding strings to the second column
                     strings = []
-                    slicing(result[item], 20)
+                    slicing(result[item], second_win_width_x)
                     current_line_number = 0
                     for resulting_item in strings:
                         second_win.addstr(
@@ -756,6 +764,6 @@ if __name__ == '__main__':
                 pass    # TODO the place for future list-of-the-lists code
                         # see issue #84.
         else:
-            command_win.addstr(3, 0, 
+            command_win.addstr(command_win_lines-2, 0, 
                     'Wrong input. To quit type: tasker quit')
             command_win.getkey()
